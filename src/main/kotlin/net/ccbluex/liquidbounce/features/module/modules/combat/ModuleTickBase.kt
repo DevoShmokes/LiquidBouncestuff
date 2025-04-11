@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -40,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.util.math.Vec3d
 
 /**
  * TickBase
@@ -71,11 +69,6 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         .doNotIncludeAlways()
 
     private var ticksToSkip = 0
-    private val tickBuffer = mutableListOf<TickData>()
-
-    override fun disable() {
-        tickBuffer.clear()
-    }
 
     @Suppress("unused")
     private val playerTickHandler = handler<PlayerTickEvent> { event ->
@@ -92,7 +85,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
     @Suppress("unused")
     private val tickHandler = tickHandler {
         // We do not want this module to conflict with blink
-        if (player.vehicle != null || ModuleBlink.running || tickBuffer.isEmpty()) {
+        if (player.vehicle != null || ModuleBlink.running) {
             return@tickHandler
         }
 
@@ -104,10 +97,13 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         var distanceSq = player.pos.squaredDistanceTo(target.pos)
         val rangeSq = inRange.start.sq()..inRange.endInclusive.sq()
 
-        var ticks = tickBuffer
+        val snapshots = PlayerSimulationCache.getSimulationForLocalPlayer()
+            .getSnapshotsBetween(0 until movingTicks)
+
+        var ticks = snapshots
             .withIndex()
             .filter { (index, tick) ->
-                val distSq = tick.position.squaredDistanceTo(target.pos)
+                val distSq = tick.pos.squaredDistanceTo(target.pos)
 
                 if (distSq < distanceSq && distSq in rangeSq && requires.any { it.meets(index) }) {
                     distanceSq = distSq
@@ -118,7 +114,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
             }
         this@ModuleTickBase.debugGeometry("Ticks") {
             ModuleDebug.DebugCollection(ticks.map { (_, tick) ->
-                ModuleDebug.DebuggedPoint(tick.position, Color4b.BLUE, 0.05)
+                ModuleDebug.DebuggedPoint(tick.pos, Color4b.BLUE, 0.05)
             })
         }
 
@@ -171,49 +167,22 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
     }
 
     @Suppress("unused")
-    private val inputHandler = handler<MovementInputEvent> { event ->
-        // We do not want this module to conflict with blink
-        if (player.vehicle != null || ModuleBlink.running) {
-            return@handler
-        }
-
-        tickBuffer.clear()
-
-        val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
-        val snapshots = simulatedPlayer.getSnapshotsBetween(0 until movingTicks)
-
-        snapshots.mapTo(tickBuffer) { snapshot ->
-            TickData(
-                snapshot.pos,
-                snapshot.fallDistance,
-                snapshot.velocity,
-                snapshot.onGround
-            )
-        }
-    }
-
-    @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         if (lineColor.a <= 0) {
             return@handler
         }
 
+        val snapshots = PlayerSimulationCache.getSimulationForLocalPlayer()
+            .getSnapshotsBetween(0 until movingTicks)
+
         renderEnvironmentForWorld(event.matrixStack) {
             withColor(lineColor) {
-                drawLineStrip(positions = tickBuffer.mapArray { tick ->
-                    relativeToCamera(tick.position).toVec3()
+                drawLineStrip(positions = snapshots.mapArray { tick ->
+                    relativeToCamera(tick.pos).toVec3()
                 })
             }
         }
     }
-
-    @JvmRecord
-    private data class TickData(
-        val position: Vec3d,
-        val fallDistance: Float,
-        val velocity: Vec3d,
-        val onGround: Boolean
-    )
 
     private enum class TickBaseMode(override val choiceName: String) : NamedChoice {
         PAST("Past"),
