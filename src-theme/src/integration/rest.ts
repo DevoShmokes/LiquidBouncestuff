@@ -16,6 +16,8 @@ import type {
     PrintableKey,
     Protocol,
     Proxy,
+    ProxyLocation,
+    ProxySubscription,
     Registries,
     Server,
     Session,
@@ -650,4 +652,18 @@ export async function setTyping(typing: boolean) {
         },
         body: JSON.stringify({typing})
     });
+}
+
+export async function getProxySubscription(): Promise<ProxySubscription> {
+    const response = await fetch(`${API_BASE}/services/proxy/subscription`);
+    const data: ProxySubscription = await response.json();
+
+    return data;
+}
+
+export async function getProxyLocations(): Promise<ProxyLocation[]> {
+    const response = await fetch(`${API_BASE}/services/proxy/locations`);
+    const data: ProxyLocation[] = await response.json();
+
+    return data;
 }

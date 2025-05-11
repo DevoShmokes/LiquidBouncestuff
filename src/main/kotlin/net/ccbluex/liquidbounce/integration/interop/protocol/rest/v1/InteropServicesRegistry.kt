@@ -15,31 +15,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
-package net.ccbluex.liquidbounce.features.misc.proxy
 
-import net.ccbluex.liquidbounce.api.core.AsyncLazy
-import net.ccbluex.liquidbounce.api.services.proxy.ProxyApi
+@file:Suppress("LongMethod")
 
-/**
- * Liquid Proxy Integration
- * @website https://liquidproxy.net
- */
-object LiquidProxy {
+package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1
 
-    /**
-     * All available relay locations.
-     *
-     * These relay proxy servers will automatically forward the incoming SOCKS5 connection
-     * through another IP (dedicated and residential) and to the target server.
-     *
-     * The relay servers match the IP based on the target server and the username of the joining player
-     * in order to give out unique IPs for each player.
-     */
-    val locations by AsyncLazy(ProxyApi::getLocations)
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getProxyLocations
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getProxySubscription
+import net.ccbluex.netty.http.rest.Node
 
-    fun getSubscription() {
-
+internal fun registerInteropServicesFunctions(node: Node) = node.withPath("/api/v1/services") {
+    withPath("/proxy") {
+        get("/locations", ::getProxyLocations)
+        get("/subscription", ::getProxySubscription)
     }
-
 }

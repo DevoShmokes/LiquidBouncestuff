@@ -19,14 +19,18 @@
 package net.ccbluex.liquidbounce.api.models.proxy
 
 import com.google.gson.annotations.SerializedName
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 
 data class ProxySubscription(
     @SerializedName("subscription_id")
+    @ProtocolExclude
     val subscriptionId: String,
     @SerializedName("valid_until")
     val validUntil: String,
     val status: Byte, // 0 is unbanned, 1 or higher is banned for a specific reason
     val plans: List<ProxyPlan>,
+    // Credentials should NEVER be forwarded to the UI
+    @ProtocolExclude
     val credentials: ProxyCredentials
 )
 
@@ -36,6 +40,12 @@ data class ProxyPlan(
     val active: Boolean
 )
 
+/**
+ * SOCKS5 proxy credentials.
+ *
+ * TODO: Replace when LiquidProxy Nodes support OAuth
+ *   for validation instead.
+ */
 data class ProxyCredentials(
     val username: String,
     val password: String

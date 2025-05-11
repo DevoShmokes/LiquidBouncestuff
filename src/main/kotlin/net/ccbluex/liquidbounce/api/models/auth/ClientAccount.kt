@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.api.models.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
+import net.ccbluex.liquidbounce.api.models.proxy.ProxySubscription
 import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import net.ccbluex.liquidbounce.api.services.auth.OAuthClient
+import net.ccbluex.liquidbounce.api.services.proxy.ProxyApi
 import net.ccbluex.liquidbounce.api.services.user.UserApi
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import java.util.*
@@ -37,7 +39,9 @@ data class ClientAccount(
     @Exclude
     var userInformation: UserInformation? = null,
     @Exclude
-    var cosmetics: Set<Cosmetic>? = null
+    var cosmetics: Set<Cosmetic>? = null,
+    @Exclude
+    var proxySubscription: ProxySubscription? = null
 ) {
     private suspend fun takeSession(): OAuthSession = session?.takeIf { !it.accessToken.isExpired() } ?: run {
         renew()
@@ -58,6 +62,10 @@ data class ClientAccount(
 
     suspend fun renew() = withContext(Dispatchers.IO) {
         session = OAuthClient.renewToken(takeSession())
+    }
+
+    suspend fun updateProxySubscription() = withContext(Dispatchers.IO) {
+        proxySubscription = ProxyApi.getSubscription(takeSession())
     }
 
     companion object {

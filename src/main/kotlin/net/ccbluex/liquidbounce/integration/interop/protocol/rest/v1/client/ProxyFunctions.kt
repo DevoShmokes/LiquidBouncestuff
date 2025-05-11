@@ -25,8 +25,11 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 import com.google.gson.JsonArray
 import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
+import kotlinx.coroutines.runBlocking
+import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
+import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.misc.proxy.LiquidProxy
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
@@ -218,6 +221,27 @@ fun deleteFavoriteProxy(requestObject: RequestObject): FullHttpResponse {
     ProxyManager.unfavoriteProxy(body.id)
     return httpOk(emptyJsonObject())
 }
+
+// GET /api/v1/liquidproxy/subscription
+@Suppress("UNUSED_PARAMETER")
+fun getProxySubscription(requestObject: RequestObject): FullHttpResponse {
+    val clientAccount = ClientAccountManager.clientAccount
+    if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
+        return httpForbidden("No account")
+    }
+
+    if (clientAccount.proxySubscription == null) {
+        runBlocking {
+            clientAccount.updateProxySubscription()
+        }
+    }
+
+    val subscription = clientAccount.proxySubscription
+        ?: return httpForbidden("No subscription")
+
+    return httpOk(interopGson.toJsonTree(subscription))
+}
+
 
 // GET /api/v1/liquidproxy/locations
 @Suppress("UNUSED_PARAMETER")

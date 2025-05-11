@@ -422,3 +422,22 @@ export interface Screen {
     class: string,
     title: string,
 }
+
+export interface ProxySubscription {
+    valid_until: string;
+    status: number;
+    plans: ProxySubscriptionPlan[];
+}
+
+export interface ProxySubscriptionPlan {
+    level: number;
+    name: string;
+    active: boolean;
+}
+
+export interface ProxyLocation {
+    name: string;
+    location: string; // human-readable location
+    region: string; // 2-letter region code
+    country_code: string; // 2-letter country code
+}
