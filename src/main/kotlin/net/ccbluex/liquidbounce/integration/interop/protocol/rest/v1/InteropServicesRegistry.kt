@@ -24,11 +24,13 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1
 
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getProxyLocations
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getProxySubscription
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postProxyConnect
 import net.ccbluex.netty.http.rest.Node
 
 internal fun registerInteropServicesFunctions(node: Node) = node.withPath("/api/v1/services") {
     withPath("/proxy") {
         get("/locations", ::getProxyLocations)
         get("/subscription", ::getProxySubscription)
+        post("/connect", ::postProxyConnect)
     }
 }

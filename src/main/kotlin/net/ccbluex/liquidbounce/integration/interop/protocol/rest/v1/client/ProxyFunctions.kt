@@ -244,9 +244,9 @@ fun getProxySubscription(requestObject: RequestObject): FullHttpResponse {
     return httpOk(interopGson.toJsonTree(subscription))
 }
 
-// POST /api/v1/services/liquidproxy
+// POST /api/v1/services/liquidproxy/connect
 @Suppress("UNUSED_PARAMETER")
-fun postProxyService(requestObject: RequestObject): FullHttpResponse {
+fun postProxyConnect(requestObject: RequestObject): FullHttpResponse {
     data class ProxyRequest(val level: Int, val location: String)
 
     val body = requestObject.asJson<ProxyRequest>()

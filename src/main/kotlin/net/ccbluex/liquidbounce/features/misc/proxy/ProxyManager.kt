@@ -46,9 +46,7 @@ object ProxyManager : Configurable("proxy"), EventListener {
      * The proxy that is set in the current session and used for all server connections
      */
     val currentProxy
-        get() = proxy.takeIf { proxy ->
-            proxy.host.isNotBlank() && proxy.port > 0 && proxies.contains(proxy)
-        }
+        get() = proxy.takeIf { proxy -> proxy.host.isNotBlank() && proxy.port > 0 }
 
     init {
         ConfigSystem.root(this)

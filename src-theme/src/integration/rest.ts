@@ -667,3 +667,13 @@ export async function getProxyLocations(): Promise<ProxyLocation[]> {
 
     return data;
 }
+
+export async function connectProxy(level: number, location: string) {
+    await fetch(`${API_BASE}/services/proxy/connect`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({level, location})
+    });
+}
