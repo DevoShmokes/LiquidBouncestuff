@@ -132,7 +132,7 @@
                 message: "The proxy is not working: " + e.error,
                 error: true
             });
-        } else {
+        } else if (e.proxy) {
             notification.set({
                 title: "ProxyManager",
                 message: "Proxy is working",
@@ -156,6 +156,15 @@
     function editProxy(proxy: Proxy) {
         currentEditProxy = proxy;
         editProxyModalVisible = true;
+    }
+
+    function fromClipboard() {
+        notification.set({
+            title: "ProxyManager",
+            message: "Checking proxy from clipboard...",
+            error: false
+        });
+        addProxyFromClipboard();
     }
 </script>
 
@@ -212,7 +221,7 @@
     <BottomButtonWrapper>
         <ButtonContainer>
             <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addProxyModalVisible = true}/>
-            <IconTextButton icon="icon-clipboard.svg" title="Add Clipboard" on:click={() => addProxyFromClipboard()}/>
+            <IconTextButton icon="icon-clipboard.svg" title="Add Clipboard" on:click={() => fromClipboard() } />
             <IconTextButton icon="icon-random.svg" disabled={renderedProxies.length === 0} title="Random"
                             on:click={connectToRandomProxy}/>
             <IconTextButton icon="icon-disconnect.svg" disabled={!isConnectedToProxy} title="Disconnect"

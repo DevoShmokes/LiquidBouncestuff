@@ -106,7 +106,7 @@ export interface PlayerInventory {
 }
 
 export interface ProxyCheckResultEvent {
-    proxy: Proxy;
+    proxy: Proxy | null;
     error: string | null;
 }
 

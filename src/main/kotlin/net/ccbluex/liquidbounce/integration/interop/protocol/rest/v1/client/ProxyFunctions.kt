@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.emptyJsonObject
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.misc.proxy.LiquidProxy
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
@@ -63,7 +65,7 @@ fun postProxy(requestObject: RequestObject): FullHttpResponse {
     if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
         return httpForbidden("Invalid id")
     }
-    
+
     ProxyManager.proxy = ProxyManager.proxies[body.id]
     return httpOk(emptyJsonObject())
 }
@@ -111,63 +113,21 @@ fun postAddProxy(requestObject: RequestObject): FullHttpResponse {
     return httpOk(emptyJsonObject())
 }
 
-// POST /api/v1/client/proxies/clipboard
+// POST /api/v1/client/proxies/add/clipboard
 @Suppress("UNUSED_PARAMETER")
 fun postClipboardProxy(requestObject: RequestObject): FullHttpResponse {
     RenderSystem.recordRenderCall {
         runCatching {
-            val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle)?.trim()
+            val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle)
             if (clipboardText.isNullOrBlank()) {
                 return@runCatching
             }
-            val proxyType = when {
-                @Suppress("HttpUrlsUsage")
-                clipboardText.startsWith("http://") -> Proxy.Type.HTTP
 
-                clipboardText.startsWith("socks5://") || clipboardText.startsWith("socks5h://") ->
-                    Proxy.Type.SOCKS5
-
-                else -> Proxy.Type.SOCKS5 // Default to SOCKS5
-            }
-            val proxyText = clipboardText.substringAfter("socks5://")
-
-            when {
-                // username:password@host:port
-                proxyText.contains("@") -> {
-                    val credentials = proxyText.substringBefore("@")
-                    val hostPort = proxyText.substringAfter("@")
-
-                    val username = credentials.substringBefore(":")
-                    val password = credentials.substringAfter(":")
-                    val host = hostPort.substringBefore(":")
-                    val port = hostPort.substringAfter(":").toInt()
-
-                    ProxyManager.validateProxy(Proxy(host, port, Proxy.credentials(username, password), proxyType))
-                }
-
-                // username:password:host:port
-                proxyText.count { it == ':' } == 3 -> {
-                    val parts = proxyText.split(":")
-                    val username = parts[0]
-                    val password = parts[1]
-                    val host = parts[2]
-                    val port = parts[3].toInt()
-
-                    ProxyManager.validateProxy(Proxy(host, port, Proxy.credentials(username, password), proxyType))
-                }
-
-                // host:port
-                else -> {
-                    val parts = proxyText.split(":")
-                    val host = parts[0]
-                    val port = parts[1].toInt()
-
-                    ProxyManager.validateProxy(Proxy(host, port, null, proxyType))
-                }
-
-            }
+            val proxy = Proxy.parse(clipboardText.trim())
+            ProxyManager.validateProxy(proxy)
         }.onFailure {
             logger.error("Failed to add proxy from clipboard.", it)
+            EventManager.callEvent(ProxyCheckResultEvent(null, error = it.message ?: "Unknown error"))
         }
     }
 

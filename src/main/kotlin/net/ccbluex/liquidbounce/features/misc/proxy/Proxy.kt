@@ -63,6 +63,66 @@ data class Proxy(
 
         val NONE = Proxy("", 0, null, Type.SOCKS5)
 
+        /**
+         * Parse a proxy string into a [Proxy] object.
+         *
+         * Detects the proxy type based on the prefix of the string.
+         * - `http://` for HTTP proxy
+         * - `socks5://` or `socks5h://` for SOCKS5 proxy
+         *
+         * Accepts the following formats:
+         * - `username:password:host:port`
+         * - `username:password@host:port`
+         *
+         * What is NOT supported:
+         * - `hostname:port:username:password`
+         */
+        fun parse(text: String): Proxy {
+            val proxyType = when {
+                @Suppress("HttpUrlsUsage")
+                text.startsWith("http://") -> Type.HTTP
+                text.startsWith("socks5://") || text.startsWith("socks5h://") -> Type.SOCKS5
+                else -> Type.SOCKS5 // Default to SOCKS5
+            }
+            val proxyText = text.substringAfter("://")
+
+            return when {
+                // username:password@host:port
+                proxyText.contains("@") -> {
+                    val credentials = proxyText.substringBefore("@")
+                    val hostPort = proxyText.substringAfter("@")
+
+                    val username = credentials.substringBefore(":")
+                    val password = credentials.substringAfter(":")
+                    val host = hostPort.substringBefore(":")
+                    val port = hostPort.substringAfter(":").toInt()
+
+                    Proxy(host, port, credentials(username, password), proxyType)
+                }
+
+                // username:password:host:port
+                proxyText.count { it == ':' } == 3 -> {
+                    val parts = proxyText.split(":")
+                    val username = parts[0]
+                    val password = parts[1]
+                    val host = parts[2]
+                    val port = parts[3].toInt()
+
+                    Proxy(host, port, credentials(username, password), proxyType)
+                }
+
+                // host:port
+                else -> {
+                    val parts = proxyText.split(":")
+                    val host = parts[0]
+                    val port = parts[1].toInt()
+
+                    Proxy(host, port, null, proxyType)
+                }
+
+            }
+        }
+
         @JvmStatic
         fun credentials(username: String, password: String): Credentials? {
             return if (username.isBlank() || password.isBlank()) {
