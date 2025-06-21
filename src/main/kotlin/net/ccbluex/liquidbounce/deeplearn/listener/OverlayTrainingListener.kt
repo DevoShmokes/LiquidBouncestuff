@@ -76,9 +76,8 @@ class OverlayTrainingListener(
             .append("░".repeat(25 - progress / 4).asText().formatted(Formatting.DARK_GRAY))
             .append("]".asText().formatted(Formatting.GRAY))
 
-        RenderSystem.recordRenderCall {
-            mc.inGameHud.setOverlayMessage(progressBar, false)
-        }
+        // TODO: This is not thread-safe. Can it be thread-safe?
+        mc.inGameHud.setOverlayMessage(progressBar, false)
     }
 
 

@@ -46,7 +46,7 @@ object CommandItemStack : CommandFactory, MinecraftShortcuts {
             .requiresIngame()
             .parameter(amountParameter)
             .handler { command, args ->
-                if (mc.interactionManager?.hasCreativeInventory() == false) {
+                if (!player.isInCreativeMode) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 

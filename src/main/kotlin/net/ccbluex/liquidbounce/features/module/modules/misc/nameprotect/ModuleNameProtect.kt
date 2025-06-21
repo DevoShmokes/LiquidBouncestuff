@@ -36,6 +36,7 @@ import net.minecraft.text.CharacterVisitor
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Style
 import net.minecraft.text.Text
+import org.ahocorasick.trie.Emit
 
 /**
  * NameProtect module
@@ -158,7 +159,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
     }
 
     class NameProtectOrderedText(original: OrderedText) : OrderedText {
-        private val mappedCharacters = ArrayList<MappedCharacter>(64)
+        private val mappedCharacters: ArrayList<MappedCharacter>
 
         init {
             val originalCharacters = ArrayList<MappedCharacter>(64)
@@ -173,10 +174,27 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
                 true
             }
 
-            val text = originalCharacters.mapString {
+            val onlyCodepointsString = originalCharacters.mapString {
                 it.codePoint.toChar()
             }
-            val replacements = replacementMappings.findReplacements(text)
+            val replacements = replacementMappings.findReplacements(onlyCodepointsString)
+
+            this.mappedCharacters = applyReplacements(originalCharacters, replacements)
+        }
+
+        /**
+         * Takes the original characters and merges them with their replacements.
+         *
+         * For example, with the arguments:
+         * - orignalCharacters: [Hello player!]
+         * - replacements: 6..12 -> You
+         * This function returns [Hello You!]
+         */
+        private fun applyReplacements(
+            originalCharacters: ArrayList<MappedCharacter>,
+            replacements: List<Pair<Emit, NameProtectMappings.MappingData>>,
+        ): ArrayList<MappedCharacter> {
+            val mappedCharacters = ArrayList<MappedCharacter>(64)
 
             var currReplacementIndex = 0
             var currentIndex = 0
@@ -195,7 +213,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
 
                     val color = replacement.second.colorGetter()
 
-                    replacement.second.newName.mapTo(this.mappedCharacters) { ch ->
+                    replacement.second.newName.mapTo(mappedCharacters) { ch ->
                         MappedCharacter(
                             originalCharacters[currentIndex].style.withColor(color.toARGB()),
                             false,
@@ -208,11 +226,12 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
                 } else {
                     val maxCopyIdx = replacementStartIdx ?: originalCharacters.size
 
-                    this.mappedCharacters.addAll(originalCharacters.subList(currentIndex, maxCopyIdx))
+                    mappedCharacters.addAll(originalCharacters.subList(currentIndex, maxCopyIdx))
 
                     currentIndex = maxCopyIdx
                 }
             }
+            return mappedCharacters
         }
 
         override fun accept(visitor: CharacterVisitor): Boolean {

@@ -24,6 +24,11 @@ import net.minecraft.util.PlayerInput
 val PlayerInput.any: Boolean
     get() = forward || backward || left || right
 
+val Input.movementSideways: Float
+    get() = this.movementVector.x
+val Input.movementForward: Float
+    get() = this.movementVector.y
+
 @Suppress("LongParameterList")
 fun PlayerInput.copy(
     forward: Boolean = this.forward,

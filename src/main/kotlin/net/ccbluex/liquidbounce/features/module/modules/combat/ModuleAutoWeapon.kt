@@ -30,16 +30,17 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.entity.blockedByShield
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.item.MaceItem
-import net.minecraft.item.SwordItem
 import net.minecraft.util.Hand
 
 /**
@@ -65,7 +66,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         val filter: (WeaponItemFacet) -> Boolean
     ): NamedChoice {
         ANY("Any", { true }),
-        SWORD("Sword", { it.itemStack.item is SwordItem }),
+        SWORD("Sword", { it.itemStack.item.isSword }),
         AXE("Axe", { it.itemStack.item is AxeItem }),
         MACE("Mace", { it.itemStack.item is MaceItem }),
 

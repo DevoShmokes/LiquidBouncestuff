@@ -19,9 +19,15 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.item.getAttributeValue
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.entity.EquipmentSlot
+import net.minecraft.entity.attribute.EntityAttributeModifier
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Hand
 import java.util.*
@@ -182,8 +188,13 @@ class ArmorItemSlot(private val armorType: Int) : ItemSlot() {
     override val itemStack: ItemStack
         get() = player.inventory.armor[this.armorType]
 
+    val equipmentSlot: EquipmentSlot
+        get() = EquipmentSlot.entries[this.armorType]
+
     override val slotType: ItemSlotType
         get() = ItemSlotType.ARMOR
+    val durability: Int
+        get() = itemStack.item.components.get(DataComponentTypes.MAX_DAMAGE)!!
 
     override fun getIdForServer(screen: GenericContainerScreen?) = if (screen == null) 8 - this.armorType else null
 

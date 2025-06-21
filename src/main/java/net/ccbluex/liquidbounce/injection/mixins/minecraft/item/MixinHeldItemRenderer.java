@@ -23,9 +23,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar;
-import net.ccbluex.liquidbounce.interfaces.ItemAdditions;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
-import net.ccbluex.liquidbounce.utils.item.classes.SwordItem;
+import net.ccbluex.liquidbounce.utils.item.ItemClassesKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -111,7 +110,8 @@ public abstract class MixinHeldItemRenderer {
     ))
     private UseAction hookUseAction(ItemStack instance) {
         var item = instance.getItem();
-        if (ItemAdditions.getItemClass(item) instanceof SwordItem && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+
+        if (ItemClassesKt.isSword(item) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return UseAction.BLOCK;
         }
 
@@ -126,7 +126,7 @@ public abstract class MixinHeldItemRenderer {
     private boolean hookIsUseItem(AbstractClientPlayerEntity instance) {
         var item = instance.getMainHandStack().getItem();
 
-        if (ItemAdditions.getItemClass(item) instanceof SwordItem && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (ItemClassesKt.isSword(item) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return true;
         }
 
@@ -141,7 +141,7 @@ public abstract class MixinHeldItemRenderer {
     private Hand hookActiveHand(AbstractClientPlayerEntity instance) {
         var item = instance.getMainHandStack().getItem();
 
-        if (ItemAdditions.getItemClass(item) instanceof SwordItem && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (ItemClassesKt.isSword(item) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return Hand.MAIN_HAND;
         }
 
@@ -156,7 +156,7 @@ public abstract class MixinHeldItemRenderer {
     private int hookItemUseItem(AbstractClientPlayerEntity instance) {
         var item = instance.getMainHandStack().getItem();
 
-        if (ItemAdditions.getItemClass(item) instanceof SwordItem && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (ItemClassesKt.isSword(item) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
             return 7200;
         }
 
@@ -185,7 +185,7 @@ public abstract class MixinHeldItemRenderer {
     private Item preventConflictingCode(Item item) {
         // only applies to sword items,
         // so that future items won't be affected if minecraft decides to actually make use out of this
-        if (ItemAdditions.getItemClass(item) instanceof SwordItem) {
+        if (ItemClassesKt.isSword(item)) {
             return Items.SHIELD; // makes the instanceof return true and therefore not do the transformation
         }
 
@@ -201,7 +201,7 @@ public abstract class MixinHeldItemRenderer {
                                                 CallbackInfo ci) {
         var shouldAnimate = ModuleSwordBlock.INSTANCE.getRunning() || KillAuraAutoBlock.INSTANCE.getBlockVisual();
 
-        if (shouldAnimate && ItemAdditions.getItemClass(stack.getItem()) instanceof SwordItem) {
+        if (shouldAnimate && ItemClassesKt.isSword(stack.getItem())) {
             final Arm arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getRunning()) {

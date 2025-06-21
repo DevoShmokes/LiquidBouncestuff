@@ -51,7 +51,7 @@ object CommandItemSkull : CommandFactory, MinecraftShortcuts {
             .handler { command, args ->
                 val name = args[0] as String
 
-                if (mc.interactionManager?.hasCreativeInventory() == false) {
+                if (!player.isInCreativeMode) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 

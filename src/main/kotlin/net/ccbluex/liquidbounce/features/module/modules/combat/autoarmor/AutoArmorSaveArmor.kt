@@ -5,11 +5,12 @@ import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.durability
+import net.ccbluex.liquidbounce.utils.item.isArmor
 import net.ccbluex.liquidbounce.utils.item.type
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.item.ArmorItem
 
 object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor", true) {
     val durabilityThreshold by int("DurabilityThreshold", 24, 0..100)
@@ -81,7 +82,7 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
             .findBestArmorPieces(durabilityThreshold = durabilityThreshold)
             .values
             .filterNotNull()
-            .filter { !it.isAlreadyEquipped && it.itemSlot.itemStack.item is ArmorItem }
+            .filter { !it.isAlreadyEquipped && it.itemSlot.itemStack.item.isArmor }
 
         val hasAnyHotBarReplacement = booleanArrayOf(
             UseHotbar.enabled,
@@ -96,12 +97,11 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
             return@tickHandler
         }
 
-        val playerArmor = player.inventory.armor.filter { it.item is ArmorItem }
-        val armorToEquip = armorToEquipWithSlots.map { it.itemSlot.itemStack.item as ArmorItem }
+        val playerArmor = Slots.Armor.filter { it.itemStack.item.isArmor }
 
-        val hasArmorToReplace = playerArmor.any { armorStack ->
-            armorStack.durability <= durabilityThreshold &&
-                armorToEquip.any { it.type() == (armorStack.item as ArmorItem).type() }
+        val hasArmorToReplace = playerArmor.any { armorSlot ->
+            armorSlot.durability <= durabilityThreshold &&
+                armorToEquipWithSlots.any { it.slotType == armorSlot.slotType }
         }
 
         // closes the inventory if the armor is replaced.

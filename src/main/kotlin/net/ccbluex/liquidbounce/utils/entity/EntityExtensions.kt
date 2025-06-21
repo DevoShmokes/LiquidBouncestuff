@@ -49,10 +49,14 @@ import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.mob.CreeperEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.projectile.PersistentProjectileEntity
 import net.minecraft.entity.vehicle.TntMinecartEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.item.ShieldItem
 import net.minecraft.item.consume.UseAction
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket
+import net.minecraft.registry.tag.DamageTypeTags
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.util.Hand
 import net.minecraft.util.PlayerInput
@@ -77,7 +81,7 @@ val Entity.netherPosition: Vec3d
     }
 
 val ClientPlayerEntity.moving
-    get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
+    get() = input.movementVector.lengthSquared() > 0.0
 
 val Input.untransformed: PlayerInput
     get() = (this as InputAddition).`liquid_bounce$getUntransformed`()
@@ -93,6 +97,9 @@ val Entity.blockVecPosition
 
 val PlayerEntity.ping: Int
     get() = mc.networkHandler?.getPlayerListEntry(uuid)?.latency ?: 0
+
+val LivingEntity.handItems: List<ItemStack>
+    get() = listOf(getEquippedStack(EquipmentSlot.MAINHAND), getEquippedStack(EquipmentSlot.OFFHAND))
 
 val ClientPlayerEntity.airTicks: Int
     get() = (this as ClientPlayerEntityAddition).`liquid_bounce$getAirTicks`()
@@ -244,8 +251,8 @@ fun Vec3d.withStrafe(
     return Vec3d(x, y, z)
 }
 
-val Entity.prevPos: Vec3d
-    get() = Vec3d(this.prevX, this.prevY, this.prevZ)
+val Entity.lastPos: Vec3d
+    get() = Vec3d(this.lastX, this.lastY, this.lastZ)
 
 val Entity.rotation: Rotation
     get() = Rotation(this.yaw, this.pitch, true)
@@ -299,8 +306,8 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
     }
 
     return Rotation(
-        this.prevYaw + (this.yaw - this.prevYaw) * tickDelta,
-        this.prevPitch + (this.pitch - this.prevPitch) * tickDelta,
+        this.lastYaw + (this.yaw - this.lastYaw) * tickDelta,
+        this.lastPitch + (this.pitch - this.lastYaw) * tickDelta,
     )
 }
 
@@ -488,6 +495,7 @@ fun LivingEntity.getExposureToExplosion(
     val shapeContext = entityBoundingBox1?.let {
         EntityShapeContext(
             isDescending,
+            false,
             entityBoundingBox1.minY,
             mainHandStack,
             { state -> canWalkOnFluid(state) },
@@ -659,4 +667,30 @@ fun ClientPlayerEntity.getFeetBlockPos(): BlockPos {
         MathHelper.ceil(bb.minY),
         MathHelper.floor(MathHelper.lerp(0.5, bb.minZ, bb.maxZ))
     )
+}
+
+
+/**
+ * Taken out of 1.21.4 code. This function is no longer available.
+ */
+fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
+    val srcEntity = source.source
+
+    if (srcEntity is PersistentProjectileEntity && srcEntity.pierceLevel > 0) {
+        return false
+    }
+
+    val item = this.blockingItem?.item
+
+    if (source.isIn(DamageTypeTags.BYPASSES_SHIELD) || item !is ShieldItem) {
+        return false
+    }
+
+    val lv4 = source.position ?: return false
+
+    val lv5 = this.getRotationVector(0.0F, this.getHeadYaw())
+    val lv6 = lv4.relativize(this.pos);
+    val lv7 = Vec3d(lv6.x, 0.0, lv6.z).normalize()
+
+    return lv7.dotProduct(lv5) < 0.0
 }

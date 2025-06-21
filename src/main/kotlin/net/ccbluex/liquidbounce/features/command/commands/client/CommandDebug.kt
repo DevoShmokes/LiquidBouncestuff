@@ -48,6 +48,7 @@ import net.minecraft.text.ClickEvent
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
+import java.net.URI
 import java.util.EnumSet
 
 /**
@@ -78,16 +79,18 @@ object CommandDebug : CommandFactory {
             val debugJson = createDebugJson(autoConfigPaste)
             gson.toJson(debugJson, buffer.outputStream().writer())
             val content = buffer.readUtf8()
-            val paste = uploadToPaste(content)
+            val pasteUriString = uploadToPaste(content)
+            val uri = URI(pasteUriString)
+
             buffer.clear()
 
             chat(
                 Text.literal("Debug information has been uploaded to: ").styled { style ->
                     style.withColor(TextColor.fromFormatting(Formatting.GREEN))
                 }.append(
-                    Text.literal(paste)
+                    Text.literal(pasteUriString)
                         .formatted(Formatting.YELLOW)
-                        .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, paste))
+                        .onClick(ClickEvent.OpenUrl(uri))
                 )
             )
         }
@@ -107,7 +110,7 @@ object CommandDebug : CommandFactory {
         })
 
         add("minecraft", JsonObject().apply {
-            addProperty("version", SharedConstants.getGameVersion().name)
+            addProperty("version", SharedConstants.getGameVersion().name())
             addProperty("protocol", SharedConstants.getProtocolVersion())
         })
 

@@ -112,6 +112,7 @@
     "minecraft.render.MixinPlayerEntityRenderer",
     "minecraft.render.MixinRenderTickCounter",
     "minecraft.render.MixinSignText",
+    "minecraft.render.MixinStatusEffectFogModifier",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWeatherRendering",
     "minecraft.render.MixinWorldRenderer",

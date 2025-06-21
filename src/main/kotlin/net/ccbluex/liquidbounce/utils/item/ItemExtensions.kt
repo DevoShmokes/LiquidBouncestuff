@@ -139,7 +139,7 @@ val MiningToolItem.type: Int
         else -> error("Unknown tool item $this (WTF?)")
     }
 
-fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = item.components
+fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = components
     .getOrDefault(
         DataComponentTypes.ATTRIBUTE_MODIFIERS,
         AttributeModifiersComponent.DEFAULT
@@ -151,8 +151,7 @@ fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = ite
 val ItemStack.attackDamage: Double
     get() {
         val entityBaseDamage = player.getAttributeValue(EntityAttributes.ATTACK_DAMAGE)
-        val baseDamage = getAttributeValue(EntityAttributes.ATTACK_DAMAGE)
-            ?: return 0.0
+        val baseDamage = item.getAttributeValue(EntityAttributes.ATTACK_DAMAGE) ?: return 0.0
 
         /*
          * Client-side damage calculation for enchantments does not exist anymore
@@ -170,12 +169,12 @@ val ItemStack.sharpnessLevel: Int
 fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel) = if (level == 0) 0.0 else 0.5 * level + 0.5
 
 val ItemStack.attackSpeed: Float
-    get() = item.getAttributeValue(EntityAttributes.ATTACK_SPEED)
+    get() = item.getAttributeValueAttackSpeed(EntityAttributes.ATTACK_SPEED)
 
 val ItemStack.durability
     get() = this.maxDamage - this.damage
 
-private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Float {
+private fun Item.getAttributeValueAttackSpeed(attribute: RegistryEntry<EntityAttribute>): Float {
     val attribInstance = EntityAttributeInstance(attribute) {}
 
     this.components

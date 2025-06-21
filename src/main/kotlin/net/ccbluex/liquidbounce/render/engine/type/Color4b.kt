@@ -19,6 +19,7 @@
 @file:Suppress("TooManyFunctions")
 package net.ccbluex.liquidbounce.render.engine.type
 
+import org.joml.Vector4f
 import org.lwjgl.opengl.GL20
 import java.awt.Color
 
@@ -144,4 +145,6 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int = 255) {
      * @return The Color object representation
      */
     fun toAwtColor(): Color = Color(r, g, b, a)
+
+    fun toVector4f(): Vector4f = Vector4f(r / 255.0F, g / 255.0F, b / 255.0F, a / 255.0F)
 }

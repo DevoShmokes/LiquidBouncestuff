@@ -18,10 +18,13 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleHitbox;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
+import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.Frustum;
@@ -33,6 +36,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.Box;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -110,6 +114,17 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     @Inject(method = "updateRenderState", at = @At("HEAD"))
     private void hookInjectEntityIntoState(T entity, S state, float tickDelta, CallbackInfo ci) {
         ((EntityRenderStateAddition) state).liquid_bounce$setEntity(entity);
+    }
+
+    @ModifyExpressionValue(method = "createHitbox", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getBoundingBox()Lnet/minecraft/util/math/Box;"))
+    private Box injectHitboxModuleDebugInfo(Box original, Entity entity, float tickProgress, boolean green) {
+        var moduleHitBox = ModuleHitbox.INSTANCE;
+
+        if (moduleHitBox.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity)) {
+            return original.expand(moduleHitBox.getSize());
+        }
+
+        return original;
     }
 
 }

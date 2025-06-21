@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
+import java.net.URI
 
 object CommandClientIntegrationSubcommand {
     fun integrationCommand() = CommandBuilder.begin("integration")
@@ -63,10 +64,9 @@ object CommandClientIntegrationSubcommand {
                     .append(
                         variable(baseUrl)
                             .underline(true)
-                            .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, baseUrl))
+                            .onClick(ClickEvent.OpenUrl(URI(baseUrl)))
                             .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
+                                HoverEvent.ShowText(
                                     regular("Click to open the integration URL in your browser.")
                                 )
                             )
@@ -89,10 +89,9 @@ object CommandClientIntegrationSubcommand {
                         .append(
                             variable("Browser")
                                 .underline(true)
-                                .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, url))
+                                .onClick(ClickEvent.OpenUrl(URI(url)))
                                 .onHover(
-                                    HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
+                                    HoverEvent.ShowText(
                                         regular("Click to open the URL in your browser.")
                                     )
                                 )
@@ -101,8 +100,7 @@ object CommandClientIntegrationSubcommand {
                         .append(
                             variable("Clipboard")
                                 .copyable(
-                                    copyContent = url, hover = HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
+                                    copyContent = url, hover = HoverEvent.ShowText(
                                         regular("Click to copy the URL to your clipboard.")
                                     )
                                 )

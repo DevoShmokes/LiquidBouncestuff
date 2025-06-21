@@ -90,18 +90,8 @@ object CommandConfig : CommandFactory {
 
                     chat(
                         variable(settingName)
-                            .onClick(
-                                ClickEvent(
-                                    ClickEvent.Action.SUGGEST_COMMAND,
-                                    ".config load $settingName"
-                                )
-                            )
-                            .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
-                                    Text.of("§7Click to load $settingName")
-                                )
-                            ),
+                            .onClick(ClickEvent.SuggestCommand(".config load $settingName"))
+                            .onHover(HoverEvent.ShowText(Text.of("§7Click to load $settingName"))),
                         regular(spaces),
                         regular(" | "),
                         variable(it.dateFormatted),
@@ -109,10 +99,7 @@ object CommandConfig : CommandFactory {
                         Text.literal(it.statusType.displayName)
                             .formatted(it.statusType.formatting)
                             .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
-                                    Text.of(it.statusDateFormatted)
-                                )
+                                HoverEvent.ShowText(Text.of(it.statusDateFormatted))
                             )
                         ,
                         regular(" | ${it.serverAddress ?: "Global"}"),

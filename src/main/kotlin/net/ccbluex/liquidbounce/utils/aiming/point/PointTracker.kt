@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.utils.aiming.point.preference.PreferredBoxPart
 import net.ccbluex.liquidbounce.utils.aiming.point.preference.PreferredBoxPoint
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.prevPos
+import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.entity.LivingEntity
@@ -105,7 +105,7 @@ class PointTracker(
         val positionDifference = playerPosition.y - entity.pos.y
 
         // Predicted target position of the enemy
-        val targetVelocity = entity.pos.subtract(entity.prevPos)
+        val targetVelocity = entity.pos.subtract(entity.lastPos)
         var box = entity.box.offset(targetVelocity.multiply(timeEnemyOffset.toDouble()))
         if (!situation.isNear && outOfBox) {
             box = box.withMinY(box.maxY).withMaxY(box.maxY + 1.0)

@@ -26,11 +26,12 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.processContent
 import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.Text
+import net.minecraft.text.TextCodecs
 import java.lang.reflect.Type
 
 object TextSerializer : JsonSerializer<Text> {
-    override fun serialize(src: Text?, typeOfSrc: Type, context: JsonSerializationContext): JsonElement =
-        Text.Serialization.toJson(
-            src?.processContent(), mc.world?.registryManager ?: DynamicRegistryManager.EMPTY
-        )
+    override fun serialize(src: Text?, typeOfSrc: Type, context: JsonSerializationContext): JsonElement = TODO("Custom Json serializer")
+//        TextCodecs.CODEC.encode(
+//            src?.processContent(), mc.world?.registryManager ?: DynamicRegistryManager.EMPTY
+//        )
 }

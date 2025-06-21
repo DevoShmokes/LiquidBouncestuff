@@ -1,0 +1,21 @@
+package net.ccbluex.liquidbounce.utils.item
+
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.entity.EquipmentSlot
+import net.minecraft.item.Item
+import net.minecraft.registry.tag.ItemTags
+import net.minecraft.registry.tag.TagKey
+
+val Item.isSword: Boolean
+    get() = isIn(ItemTags.SWORDS)
+
+private val ARMOR_EQUIPMENT_SLOTS = setOf(EquipmentSlot.HEAD, EquipmentSlot.BODY, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+
+val Item.isArmor: Boolean
+    get() {
+        val attrib = components.get(DataComponentTypes.EQUIPPABLE) ?: return false
+
+        return attrib.slot in ARMOR_EQUIPMENT_SLOTS && attrib.allowedEntities.isEmpty
+    }
+
+fun Item.isIn(itemTag: TagKey<Item>) = registryEntry.isIn(itemTag)

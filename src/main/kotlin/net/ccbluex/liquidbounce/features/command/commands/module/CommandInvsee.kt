@@ -60,7 +60,7 @@ object CommandInvsee : CommandFactory {
                     throw CommandException(command.result("playerNotFound", inputName))
                 }
 
-                RenderSystem.recordRenderCall {
+                mc.executeSync {
                     mc.setScreen(ViewedInventoryScreen(player))
                 }
 

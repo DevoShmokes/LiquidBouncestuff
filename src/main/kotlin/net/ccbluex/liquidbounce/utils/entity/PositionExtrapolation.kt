@@ -3,7 +3,6 @@ package net.ccbluex.liquidbounce.utils.entity
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.fabricmc.fabric.impl.`object`.builder.FabricEntityTypeImpl.Builder.Living
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Vec3d
@@ -39,7 +38,7 @@ class LinearPositionExtrapolation(
     private val basePosition: Vec3d,
     private val velocity: Vec3d
 ) : PositionExtrapolation {
-    constructor(entity: LivingEntity) : this(entity.pos, entity.pos - entity.prevPos)
+    constructor(entity: LivingEntity) : this(entity.pos, entity.pos - entity.lastPos)
 
     override fun getPositionInTicks(ticks: Double): Vec3d {
         return basePosition + velocity * ticks

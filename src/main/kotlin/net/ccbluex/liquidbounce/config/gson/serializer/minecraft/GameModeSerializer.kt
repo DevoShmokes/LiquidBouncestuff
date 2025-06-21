@@ -27,5 +27,5 @@ import java.lang.reflect.Type
 
 object GameModeSerializer : JsonSerializer<GameMode> {
     override fun serialize(src: GameMode?, typeOfSrc: Type, context: JsonSerializationContext) =
-        src?.let { JsonPrimitive(it.getName()) }
+        src?.let { JsonPrimitive(it.id) }
 }

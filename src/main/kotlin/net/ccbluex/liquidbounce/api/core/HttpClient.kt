@@ -106,7 +106,7 @@ inline fun <reified T> Response.parse(): T {
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
         NativeImageBackedTexture::class.java -> body.byteStream().use { stream ->
-            NativeImageBackedTexture(NativeImage.read(stream))
+            NativeImageBackedTexture({ "Image from Frontend" }, NativeImage.read(stream))
         } as T
         else -> decode<T>(body.charStream())
     }

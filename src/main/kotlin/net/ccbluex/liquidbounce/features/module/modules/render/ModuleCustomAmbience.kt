@@ -33,7 +33,9 @@ import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.Fog
 import net.minecraft.client.render.FogShape
+import net.minecraft.client.render.fog.FogData
 import net.minecraft.util.math.MathHelper
+import org.joml.Vector4f
 import org.lwjgl.opengl.GL13
 
 /**
@@ -57,26 +59,30 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
         private val backgroundColor by color("BackgroundColor", Color4b(47, 128, 255, 201))
         private val fogStart by float("Distance", 0f, -8f..500f)
         private val density by float("Density", 10f, 0f..100f)
-        private val fogShape by enumChoice("FogShape", Shape.SPHERE)
+//        private val fogShape by enumChoice("FogShape", Shape.SPHERE)
+
+        val fogColor: Vector4f
+            get() = color.toVector4f()
 
         /**
          * [MixinBackgroundRenderer]
          */
-        fun modifyFog(camera: Camera, viewDistance: Float, fog: Fog): Fog {
+        fun modifyFog(camera: Camera, viewDistance: Float, fog: FogData): FogData {
             if (!this.running) {
                 return fog
             }
 
-            val start = MathHelper.clamp(fogStart, -8f, viewDistance)
-            val end = MathHelper.clamp(fogStart + density, 0f, viewDistance)
+            fog.renderDistanceStart = MathHelper.clamp(fogStart, -8f, viewDistance)
+            fog.renderDistanceStart = MathHelper.clamp(fogStart + density, 0f, viewDistance)
 
-            var shape = fog.shape
-            val type = camera.submersionType
-            if (type == CameraSubmersionType.NONE) {
-                shape = fogShape.fogShape
-            }
+            // TODO: Find out if this can still be supported and if it's worth the hustle...
+//            var shape = fog.shape
+//            val type = camera.submersionType
+//            if (type == CameraSubmersionType.NONE) {
+//                shape = fogShape.fogShape
+//            }
 
-            return Fog(start, end, shape, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
+            return fog
         }
 
         fun modifyClearColor(): Boolean {

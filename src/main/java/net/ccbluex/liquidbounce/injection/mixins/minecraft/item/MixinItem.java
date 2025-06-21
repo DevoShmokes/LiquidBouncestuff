@@ -22,11 +22,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
-import net.ccbluex.liquidbounce.interfaces.ItemAdditions;
-import net.ccbluex.liquidbounce.interfaces.ItemSettingsAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.item.ItemClass;
-import net.ccbluex.liquidbounce.utils.item.classes.SwordItem;
+import net.ccbluex.liquidbounce.utils.item.ItemClassesKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ConsumableComponent;
@@ -43,24 +40,16 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Item.class)
-public class MixinItem implements ItemAdditions {
-    @Unique
-    private ItemClass itemClass;
-
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void injectItemClass(Item.Settings settings, CallbackInfo ci) {
-        this.itemClass = ((ItemSettingsAddition) settings).liquidBounce$buildItemClass();
-    }
+public class MixinItem {
 
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     private void hookSwordUse(World world, PlayerEntity user, Hand hand,
                               CallbackInfoReturnable<ActionResult> cir) {
         // Hooks sword use - only if main hand (otherwise this makes no sense on 1.8)
-        if (this.itemClass instanceof SwordItem && ModuleSwordBlock.INSTANCE.getRunning() && !ModuleSwordBlock.INSTANCE.getOnlyVisual() && hand == Hand.MAIN_HAND) {
+        if (shouldBlockForReal() && hand == Hand.MAIN_HAND) {
             var itemStack = user.getStackInHand(hand);
             user.setCurrentHand(hand);
             ConsumableComponent consumableComponent = itemStack.get(DataComponentTypes.CONSUMABLE);
@@ -75,7 +64,7 @@ public class MixinItem implements ItemAdditions {
     @ModifyReturnValue(method = "getUseAction", at = @At("RETURN"))
     private UseAction hookSwordUseAction(UseAction original) {
         // Hooks sword use action
-        if (this.itemClass instanceof SwordItem && ModuleSwordBlock.INSTANCE.getRunning() && !ModuleSwordBlock.INSTANCE.getOnlyVisual()) {
+        if (shouldBlockForReal()) {
             return UseAction.BLOCK;
         }
 
@@ -85,11 +74,16 @@ public class MixinItem implements ItemAdditions {
     @ModifyReturnValue(method = "getMaxUseTime", at = @At("RETURN"))
     private int hookMaxUseTime(int original) {
         // Hooks sword max use time
-        if (this.itemClass instanceof SwordItem && ModuleSwordBlock.INSTANCE.getRunning() && !ModuleSwordBlock.INSTANCE.getOnlyVisual()) {
+        if (shouldBlockForReal()) {
             return 72000;
         }
 
         return original;
+    }
+
+    @Unique
+    private boolean shouldBlockForReal() {
+        return ItemClassesKt.isSword((Item) ((Object) this)) && ModuleSwordBlock.INSTANCE.getRunning() && !ModuleSwordBlock.INSTANCE.getOnlyVisual();
     }
 
     @ModifyExpressionValue(method = "raycast", at = @At(value = "INVOKE",
@@ -102,10 +96,5 @@ public class MixinItem implements ItemAdditions {
         }
 
         return original;
-    }
-
-    @Override
-    public @NotNull ItemClass liquidBounce$getItemClass() {
-        return this.itemClass;
     }
 }

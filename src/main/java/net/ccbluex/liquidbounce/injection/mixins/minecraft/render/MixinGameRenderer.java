@@ -130,18 +130,19 @@ public abstract class MixinGameRenderer {
     /**
      * Hook world render event
      */
-    @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0))
+    // TODO Is this injection point still good? Otherwise try after WorldRenderer.render
+    @Inject(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderHand(FZLorg/joml/Matrix4f;)V"))
     public void hookWorldRender(RenderTickCounter tickCounter, CallbackInfo ci, @Local(ordinal = 2) Matrix4f matrix4f2) {
         // TODO: Improve this
         var newMatStack = new MatrixStack();
 
         newMatStack.multiplyPositionMatrix(matrix4f2);
 
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.camera, tickCounter.getTickDelta(false)));
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.camera, tickCounter.getTickProgress(false)));
     }
 
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/LightmapTextureManager;enable()V", shift = At.Shift.AFTER))
-    public void prepareItemCharms(Camera camera, float tickDelta, Matrix4f matrix4f, CallbackInfo ci) {
+    public void prepareItemCharms(float tickProgress, boolean sleeping, Matrix4f positionMatrix, CallbackInfo ci) {
         if (ModuleItemChams.INSTANCE.getRunning()) {
             ModuleItemChams.INSTANCE.setData();
             OutlineEffectShader.INSTANCE.prepare();
@@ -149,7 +150,7 @@ public abstract class MixinGameRenderer {
     }
 
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", shift = At.Shift.AFTER))
-    public void drawItemCharms(Camera camera, float tickDelta, Matrix4f matrix4f, CallbackInfo ci) {
+    public void drawItemCharms(float tickProgress, boolean sleeping, Matrix4f positionMatrix, CallbackInfo ci) {
         if (ModuleItemChams.INSTANCE.getActive()) {
             ModuleItemChams.INSTANCE.setActive(false);
             OutlineEffectShader.INSTANCE.apply(true);
@@ -163,7 +164,7 @@ public abstract class MixinGameRenderer {
             target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V",
             shift = At.Shift.AFTER))
     public void hookScreenRender(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci, @Local DrawContext drawContext) {
-        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(drawContext, tickCounter.getTickDelta(false)));
+        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(drawContext, tickCounter.getTickProgress(false)));
     }
 
     @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
@@ -192,7 +193,7 @@ public abstract class MixinGameRenderer {
 
         float g = playerEntity.distanceMoved - playerEntity.lastDistanceMoved;
         float h = -(playerEntity.distanceMoved + g * f);
-        float i = MathHelper.lerp(f, playerEntity.prevStrideDistance, playerEntity.strideDistance);
+        float i = MathHelper.lerp(f, playerEntity.lastStrideDistance, playerEntity.strideDistance);
         matrixStack.translate((MathHelper.sin(h * MathHelper.PI) * i * 0.5F), -Math.abs(MathHelper.cos(h * MathHelper.PI) * i), 0.0D);
         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(h * MathHelper.PI) * i * (3.0F + additionalBobbing)));
         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));

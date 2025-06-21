@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.itemgroup.groups.ExploitsItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
@@ -51,7 +52,7 @@ object ClientItemGroups : Configurable("tabs") {
         containers.add(compoundString)
         ConfigSystem.storeConfigurable(this)
 
-        RenderSystem.recordRenderCall {
+        mc.execute {
             chat("§aAdded container to creative inventory")
         }
     }
