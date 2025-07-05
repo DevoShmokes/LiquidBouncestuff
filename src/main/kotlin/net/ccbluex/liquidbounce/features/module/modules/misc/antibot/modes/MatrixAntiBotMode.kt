@@ -26,8 +26,10 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isGameProfileUnique
+import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot.ArmorType
+import net.ccbluex.liquidbounce.utils.inventory.armorItems
+import net.ccbluex.liquidbounce.utils.item.isArmor
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
@@ -81,7 +83,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
                 continue
             }
 
-            var armor: MutableIterable<ItemStack>? = null
+            var armor: List<ItemStack>? = null
 
             if (!isFullyArmored(entity)) {
                 armor = entity.armorItems
@@ -97,9 +99,10 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
     }
 
     private fun isFullyArmored(entity: PlayerEntity): Boolean {
-        return (0..3).all {
-            val stack = entity.inventory.getArmorStack(it)
-            stack.item is ArmorItem && stack.hasEnchantments()
+        return (ArmorType.entries).all {
+            val stack = entity.getEquippedStack(it.equipmentSlot)
+
+            stack.item.isArmor && stack.hasEnchantments()
         }
     }
 
@@ -109,7 +112,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
      *
      * With the help of at least 1 tick of waiting time, this function patches this "trick".
      */
-    private fun updatesArmor(entity: PlayerEntity, prevArmor: MutableIterable<ItemStack>?): Boolean {
+    private fun updatesArmor(entity: PlayerEntity, prevArmor: List<ItemStack>?): Boolean {
         return prevArmor != entity.armorItems
     }
 

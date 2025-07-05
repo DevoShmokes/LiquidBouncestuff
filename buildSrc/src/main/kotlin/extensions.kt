@@ -56,7 +56,13 @@ fun Task.getContributors(repoOwner: String, repoName: String): List<String> = tr
             .generalSettings()
             .build()
 
-        val response = send(request, HttpResponse.BodyHandlers.discarding())
+        val response = runCatching {
+            send(request, HttpResponse.BodyHandlers.discarding())
+        }.getOrElse {
+            logger.error("HEAD request to ${request.uri()} failed: $it")
+
+            return 1
+        }
 
         return if (response.isSuccessful) {
             val linkHeader = response.headers().firstValue("link").orElse("")

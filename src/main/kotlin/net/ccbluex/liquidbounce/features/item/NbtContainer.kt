@@ -19,17 +19,13 @@
 package net.ccbluex.liquidbounce.features.item
 
 import com.mojang.logging.LogUtils
-import com.mojang.serialization.Codec
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.client.asNbt
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.nbt.NbtList
-import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.storage.NbtWriteView
 import net.minecraft.text.Text
 import net.minecraft.text.TextCodecs

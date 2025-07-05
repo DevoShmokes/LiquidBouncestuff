@@ -81,8 +81,7 @@ class PolyglotScript(
                         chat(
                             regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())))
                                 .append(variable(devtoolURL)
-                                    .copyable(copyContent = devtoolURL, hover = HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
+                                    .copyable(copyContent = devtoolURL, hover = HoverEvent.ShowText(
                                         regular(translation("liquidbounce.scripts.debug.inspect.url"))
                                     ))
                                     .underline(true)

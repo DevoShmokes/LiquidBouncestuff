@@ -27,8 +27,10 @@ import net.ccbluex.liquidbounce.event.events.SneakNetworkEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.entity.copy
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket
 
 /**
  * Sneak module
@@ -90,24 +92,14 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
             when (event.state) {
                 EventState.PRE -> {
                     if (networkSneaking) {
-                        network.sendPacket(
-                            ClientCommandC2SPacket(
-                                player,
-                                ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY
-                            )
-                        )
+                        network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = false)))
                         networkSneaking = false
                     }
                 }
 
                 EventState.POST -> {
                     if (networkSneaking) {
-                        network.sendPacket(
-                            ClientCommandC2SPacket(
-                                player,
-                                ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY
-                            )
-                        )
+                        network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = true)))
                         networkSneaking = true
                     }
                 }
@@ -116,7 +108,7 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
         override fun disable() {
             if (networkSneaking) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+                network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = false)))
                 networkSneaking = false
             }
         }

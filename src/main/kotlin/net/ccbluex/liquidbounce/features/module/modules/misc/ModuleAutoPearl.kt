@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.entity.resolve
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -44,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityDimensions
 import net.minecraft.entity.EntityType
+import net.minecraft.entity.LazyEntityReference
 import net.minecraft.entity.SpawnReason
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity
 import net.minecraft.item.Items
@@ -156,7 +158,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
         }
 
         val destination = runSimulation(
-            owner = pearl.owner ?: player,
+            owner = pearl.owner.resolve() ?: player,
             velocity = velocity,
             pos = pearlPos
         )?.pos ?: return
@@ -185,17 +187,17 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = ar
             return false
         }
 
-        if (pearl.owner == null) {
-            return mode == Modes.TRIGGER
-        }
+        val ownerReference = pearl.owner
 
-        if (pearl.ownerUuid == player.uuid) {
+        val owner = pearl.owner.resolve() ?: return mode == Modes.TRIGGER
+
+        if (ownerReference!!.uuid == player.uuid) {
             return false
         }
 
         return when(mode) {
-            Modes.TRIGGER -> pearl.owner!!.shouldBeAttacked()
-            Modes.TARGET -> ModuleKillAura.targetTracker.target?.uuid == pearl.ownerUuid
+            Modes.TRIGGER -> owner.shouldBeAttacked()
+            Modes.TARGET -> ownerReference.uuid == ModuleKillAura.targetTracker.target?.uuid
         }
     }
 

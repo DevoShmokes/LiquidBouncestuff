@@ -30,12 +30,16 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
-import net.ccbluex.liquidbounce.utils.item.material
+import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot.ArmorType
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.block.AbstractSkullBlock
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.*
+import net.minecraft.item.BlockItem
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.item.equipment.ArmorMaterial
 import net.minecraft.item.equipment.ArmorMaterials
 import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket
@@ -97,7 +101,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
 
             constructor(choiceName: String, material: ArmorMaterial) : this(
                 choiceName,
-                { (it.item as? ArmorItem)?.material() == material }
+                { (it.item.components.get(DataComponentTypes.EQUIPPABLE)?.equipSound == material.equipSound) }
             )
 
             constructor(choiceName: String, item: Item) : this(choiceName, { it.item === item })
@@ -133,11 +137,11 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         )
 
         fun isValid(entity: PlayerEntity): Boolean {
-            return entity.armorItems.withIndex().all { (index, armor) ->
+            return ArmorType.entries.withIndex().all { (index, armor) ->
                 val predicates = values[values.lastIndex - index].get()
                 // Nothing selected = skip this part
                 return predicates.isEmpty() || predicates.any {
-                    it.predicate.test(armor)
+                    it.predicate.test(entity.getEquippedStack(armor.equipmentSlot))
                 }
             }
         }
@@ -208,7 +212,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
                 val entity = packet.getEntity(world) ?: return@handler
                 val id = entity.id
                 val currentValue = flyingSet.getOrDefault(id, 0)
-                if (entity.isOnGround && entity.prevY != entity.y) {
+                if (entity.isOnGround && entity.lastY != entity.y) {
                     flyingSet.put(id, currentValue + 1)
                 } else if (!entity.isOnGround && currentValue > 0) {
                     val newVL = currentValue / 2

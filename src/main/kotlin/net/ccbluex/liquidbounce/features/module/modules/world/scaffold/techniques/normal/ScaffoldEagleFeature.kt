@@ -23,10 +23,12 @@ import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.utils.entity.copy
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket
 
 object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Eagle", false) {
 
@@ -70,18 +72,8 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
             placedBlocks = 0
 
             if (mode == EagleMode.PACKET) {
-                network.sendPacket(
-                    ClientCommandC2SPacket(
-                        player,
-                        ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY
-                    )
-                )
-                network.sendPacket(
-                    ClientCommandC2SPacket(
-                        player,
-                        ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY
-                    )
-                )
+                network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = true)))
+                network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = false)))
             }
         }
     }

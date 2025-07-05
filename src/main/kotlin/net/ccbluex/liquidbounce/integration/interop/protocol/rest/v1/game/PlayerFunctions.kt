@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
+import net.ccbluex.liquidbounce.utils.inventory.armorItems
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -131,7 +132,7 @@ data class PlayerInventoryData(
 
     companion object {
         fun fromPlayer(player: PlayerEntity) = PlayerInventoryData(
-            armor = player.inventory.armor.map(ItemStack::copy),
+            armor = player.armorItems.map(ItemStack::copy),
             main = player.inventory.main.map(ItemStack::copy),
             crafting = player.playerScreenHandler.craftingInput.heldStacks.map(ItemStack::copy)
         )

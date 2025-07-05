@@ -8,8 +8,16 @@ import net.minecraft.registry.tag.TagKey
 
 val Item.isSword: Boolean
     get() = isIn(ItemTags.SWORDS)
+val Item.isTool: Boolean
+    get() = components.get(DataComponentTypes.TOOL) != null
 
-private val ARMOR_EQUIPMENT_SLOTS = setOf(EquipmentSlot.HEAD, EquipmentSlot.BODY, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+
+private val ARMOR_EQUIPMENT_SLOTS = setOf(
+    EquipmentSlot.HEAD,
+    EquipmentSlot.BODY,
+    EquipmentSlot.LEGS,
+    EquipmentSlot.FEET
+)
 
 val Item.isArmor: Boolean
     get() {
@@ -19,3 +27,5 @@ val Item.isArmor: Boolean
     }
 
 fun Item.isIn(itemTag: TagKey<Item>) = registryEntry.isIn(itemTag)
+
+operator fun TagKey<Item>.contains(item: Item) = item.isIn(this)

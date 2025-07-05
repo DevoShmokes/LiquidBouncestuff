@@ -1,0 +1,1 @@
+- `ClientCommandC2S PRESS_SNREAK/RELEASE_SNEAK` -> `network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = true)))`

@@ -34,7 +34,7 @@ val usesViaFabricPlus = runCatching {
     // Register ViaFabricPlus protocol version change callback
     ViaFabricPlus.getImpl().registerOnChangeProtocolVersionCallback { _, _ ->
         // Update the window title
-        RenderSystem.recordRenderCall {
+        mc.execute {
             mc.updateWindowTitle()
         }
     }
@@ -45,8 +45,8 @@ val usesViaFabricPlus = runCatching {
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
-val defaultProtocolVersion = ClientProtocolVersion(SharedConstants.getGameVersion().name,
-    SharedConstants.getGameVersion().protocolVersion)
+val defaultProtocolVersion = ClientProtocolVersion(SharedConstants.getGameVersion().name(),
+    SharedConstants.getGameVersion().protocolVersion())
 
 val protocolVersion: ClientProtocolVersion
     get() = runCatching {

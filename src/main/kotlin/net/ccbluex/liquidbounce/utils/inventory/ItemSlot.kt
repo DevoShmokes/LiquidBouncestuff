@@ -19,15 +19,12 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.item.getAttributeValue
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.attribute.EntityAttributeModifier
-import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Hand
 import java.util.*
@@ -184,19 +181,16 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot() {
     }
 }
 
-class ArmorItemSlot(private val armorType: Int) : ItemSlot() {
+class ArmorItemSlot(val armorType: ArmorType) : ItemSlot() {
     override val itemStack: ItemStack
-        get() = player.inventory.armor[this.armorType]
-
-    val equipmentSlot: EquipmentSlot
-        get() = EquipmentSlot.entries[this.armorType]
+        get() = player.getEquippedStack(this.armorType.equipmentSlot)
 
     override val slotType: ItemSlotType
         get() = ItemSlotType.ARMOR
     val durability: Int
         get() = itemStack.item.components.get(DataComponentTypes.MAX_DAMAGE)!!
 
-    override fun getIdForServer(screen: GenericContainerScreen?) = if (screen == null) 8 - this.armorType else null
+    override fun getIdForServer(screen: GenericContainerScreen?) = if (screen == null) this.armorType.serverId else null
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -209,6 +203,15 @@ class ArmorItemSlot(private val armorType: Int) : ItemSlot() {
 
     override fun hashCode(): Int {
         return Objects.hash(this.javaClass, this.armorType)
+    }
+
+    enum class ArmorType(val equipmentSlot: EquipmentSlot, val serverId: Int) {
+        HEAD(EquipmentSlot.HEAD, 5),
+        CHEST(EquipmentSlot.CHEST, 6),
+        LEGS(EquipmentSlot.LEGS, 7),
+        FEET(EquipmentSlot.FEET, 8);
+
+        // TODO: Check if those serverIds are correct.
     }
 }
 

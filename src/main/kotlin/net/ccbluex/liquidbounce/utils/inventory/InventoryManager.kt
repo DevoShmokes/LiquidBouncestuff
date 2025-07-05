@@ -379,6 +379,7 @@ data class ClickInventoryAction(
 
     override fun performAction(): Boolean {
         val slotId = slot.getIdForServer(screen) ?: return false
+
         interaction.clickSlot(screen?.syncId ?: 0, slotId, button, actionType, player)
 
         return true

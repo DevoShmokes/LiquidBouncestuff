@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.mainHandStack
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
@@ -117,7 +118,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         val miningSpeedMultiplier = slot.itemStack.getMiningSpeedMultiplier(blockState)
 
         // The current slot already matches the best
-        if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
+        if (miningSpeedMultiplier == player.mainHandStack.getMiningSpeedMultiplier(blockState)) {
             return null
         }
 

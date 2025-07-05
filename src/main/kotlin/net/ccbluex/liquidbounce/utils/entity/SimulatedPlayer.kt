@@ -54,6 +54,7 @@ import net.minecraft.registry.tag.TagKey
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShape
 import net.minecraft.world.World
@@ -103,7 +104,7 @@ class SimulatedPlayer(
 
                 player.isSprinting,
 
-                player.fallDistance,
+                player.fallDistance.toFloat(),
                 player.jumpingCooldown,
                 player.jumping,
                 player.isGliding,
@@ -131,7 +132,7 @@ class SimulatedPlayer(
 
                 player.isSprinting,
 
-                player.fallDistance,
+                player.fallDistance.toFloat(),
                 player.jumpingCooldown,
                 player.jumping,
                 player.isGliding,
@@ -895,24 +896,21 @@ class SimulatedPlayer(
         }
 
         fun update() {
-            if (this.playerInput.forward != this.playerInput.backward) {
-                this.movementForward = if (this.playerInput.forward) 1.0f else -1.0f
-            } else {
-                this.movementForward = 0.0f
+            val movementForward = when {
+                this.playerInput.forward == this.playerInput.backward -> 0.0f
+                this.playerInput.forward -> 1.0f
+                else -> -1.0f
             }
 
-            movementSideways = if (playerInput.left == playerInput.right) {
-                0.0f
-            } else if (playerInput.left) {
-                1.0f
-            } else {
-                -1.0f
+            val movementSideways = when {
+                playerInput.left == playerInput.right -> 0.0f
+                playerInput.left -> 1.0f
+                else -> -1.0f
             }
 
-            if (playerInput.sneak) {
-                movementSideways = (movementSideways.toDouble() * 0.3).toFloat()
-                movementForward = (movementForward.toDouble() * 0.3).toFloat()
-            }
+            val factor = if (playerInput.sneak) 0.3F else 1.0F
+
+            this.movementVector = Vec2f(movementSideways, movementForward).multiply(factor)
         }
 
         override fun toString(): String {

@@ -88,7 +88,7 @@ fun postConnect(requestObject: RequestObject): FullHttpResponse {
 
     val serverAddress = ServerAddress.parse(serverInfo.address)
 
-    RenderSystem.recordRenderCall {
+    mc.execute {
         ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
     }
     return httpOk(emptyJsonObject())
@@ -218,7 +218,7 @@ object ActiveServerList : EventListener {
             try {
                 serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }) {
                     serverEntry.status =
-                        if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion) {
+                        if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion()) {
                             ServerInfo.Status.SUCCESSFUL
                         } else {
                             ServerInfo.Status.INCOMPATIBLE

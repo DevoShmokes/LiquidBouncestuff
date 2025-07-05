@@ -33,13 +33,13 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
+import net.ccbluex.liquidbounce.utils.item.isTool
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.item.MiningToolItem
 import net.minecraft.item.consume.UseAction
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Identifier
@@ -175,7 +175,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
             }
 
             // Only use silent offhand if we have tools in hand.
-            if (player.mainHandStack.item !is MiningToolItem) {
+            if (!player.mainHandStack.item.isTool) {
                 return@handler
             }
 

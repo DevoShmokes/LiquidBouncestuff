@@ -103,8 +103,8 @@ object ModuleFastExp : ClientModule(
             player.offHandStack
         }
 
-        return player.inventory.armor.any { itemStack -> isRepaired(itemStack) } || isRepaired(possibleSlot) ||
-            player.inventory.armor.all { itemStack -> noMending(itemStack) } && noMending(possibleSlot)
+        return player.armorItems.any { itemStack -> isRepaired(itemStack) } || isRepaired(possibleSlot) ||
+            player.armorItems.all { itemStack -> noMending(itemStack) } && noMending(possibleSlot)
     }
 
     private fun isRepaired(itemStack: ItemStack) = itemStack.getEnchantment(Enchantments.MENDING) != 0 &&

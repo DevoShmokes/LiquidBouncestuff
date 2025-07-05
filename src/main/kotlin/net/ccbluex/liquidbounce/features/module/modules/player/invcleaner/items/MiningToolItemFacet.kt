@@ -19,13 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
-import net.ccbluex.liquidbounce.utils.item.material
-import net.ccbluex.liquidbounce.utils.item.type
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.ToolComponent
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.MiningToolItem
+import net.minecraft.item.ItemStack
+import net.minecraft.registry.tag.ItemTags
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
@@ -37,7 +39,7 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
         private val COMPARATOR =
             ComparatorChain<MiningToolItemFacet>(
-                compareBy { (it.itemStack.item as MiningToolItem).material().speed },
+                compareBy { it.toolComponent.defaultMiningSpeed },
                 compareBy { VALUE_ESTIMATOR.estimateValue(it.itemStack) },
                 PREFER_BETTER_DURABILITY,
                 PREFER_ITEMS_IN_HOTBAR,
@@ -45,10 +47,43 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
     }
 
+    private val toolComponent: ToolComponent
+    private val toolType: MiningToolItemType
+
+    init {
+        val component = this.itemStack.components.get(DataComponentTypes.TOOL)
+
+        this.toolComponent = component ?: throw IllegalStateException("No tool component found")
+        this.toolType = MiningToolItemType.getToolTypeFor(this.itemStack)
+    }
+
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.TOOL, (this.itemStack.item as MiningToolItem).type)
+        get() = ItemCategory(ItemType.TOOL, this.toolType.ordinal)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as MiningToolItemFacet)
+    }
+
+    enum class MiningToolItemType {
+        PICKAXE,
+        AXE,
+        SHOVEL,
+        HOE;
+
+        companion object {
+            fun getToolTypeFor(itemStack: ItemStack): MiningToolItemType {
+                return when {
+                    itemStack.isIn(ItemTags.PICKAXES) -> PICKAXE
+                    itemStack.isIn(ItemTags.AXES) -> AXE
+                    itemStack.isIn(ItemTags.SHOVELS) -> SHOVEL
+                    itemStack.isIn(ItemTags.HOES) -> HOE
+                    else -> {
+                        logger.warn("Cannot get tool type of tool item ${itemStack.item}")
+
+                        PICKAXE
+                    }
+                }
+            }
+        }
     }
 }

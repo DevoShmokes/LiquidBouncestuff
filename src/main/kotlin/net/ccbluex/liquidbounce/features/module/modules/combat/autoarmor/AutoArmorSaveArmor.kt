@@ -1,14 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
-import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.UseHotbar
 import net.ccbluex.liquidbounce.config.types.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.UseHotbar
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.isArmor
-import net.ccbluex.liquidbounce.utils.item.type
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 
@@ -101,11 +99,11 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
 
         val hasArmorToReplace = playerArmor.any { armorSlot ->
             armorSlot.durability <= durabilityThreshold &&
-                armorToEquipWithSlots.any { it.slotType == armorSlot.slotType }
+                armorToEquipWithSlots.any { it.slotType == armorSlot.armorType.equipmentSlot }
         }
 
         // closes the inventory if the armor is replaced.
-        closeInventory(hasArmorToEquip = armorToEquip.isNotEmpty())
+        closeInventory(hasArmorToEquip = armorToEquipWithSlots.isNotEmpty())
 
         // tries to close the previous screen and open the inventory
         openInventory(hasArmorToReplace = hasArmorToReplace)

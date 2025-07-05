@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireb
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballOnEdgeTrigger
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.inventory.interactItem
+import net.ccbluex.liquidbounce.utils.inventory.mainHandStack
 import net.minecraft.item.FireChargeItem
 import net.minecraft.util.Hand
 
@@ -63,7 +64,7 @@ internal object FlyFireball : Choice("Fireball") {
         }
     }
 
-    fun holdsFireball() = player.inventory.mainHandStack.item is FireChargeItem
+    fun holdsFireball() = player.mainHandStack.item is FireChargeItem
 
     fun throwFireball() {
         interactItem(Hand.MAIN_HAND)

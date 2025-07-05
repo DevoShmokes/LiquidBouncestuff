@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -42,6 +43,7 @@ import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
+import net.minecraft.entity.LazyEntityReference
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.TntEntity
 import net.minecraft.entity.damage.DamageSource
@@ -66,8 +68,13 @@ import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.Difficulty
 import net.minecraft.world.RaycastContext
 import net.minecraft.world.World
+import net.minecraft.world.entity.UniquelyIdentifiable
 import net.minecraft.world.explosion.ExplosionBehavior
 import net.minecraft.world.explosion.ExplosionImpl
+import org.jetbrains.annotations.Contract
+import java.io.InputStream
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
@@ -693,4 +700,13 @@ fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
     val lv7 = Vec3d(lv6.x, 0.0, lv6.z).normalize()
 
     return lv7.dotProduct(lv5) < 0.0
+}
+
+@OptIn(ExperimentalContracts::class)
+inline fun <reified T: Entity> LazyEntityReference<T>?.resolve(): T? {
+    contract {
+        returnsNotNull() implies (this@resolve != null)
+    }
+
+    return LazyEntityReference.resolve(this ?: return null, world, T::class.java)
 }

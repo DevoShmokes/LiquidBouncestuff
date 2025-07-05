@@ -6,7 +6,9 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.entity.copy
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket
 
 internal class NoSlowSneakingSwitch(override val parent: ChoiceConfigurable<*>) : Choice("Switch") {
     private val timingMode by enumChoice("Timing", TimingMode.PRE_POST)
@@ -16,19 +18,19 @@ internal class NoSlowSneakingSwitch(override val parent: ChoiceConfigurable<*>) 
         when (timingMode) {
             TimingMode.PRE_POST -> when (event.state) {
                 EventState.PRE -> {
-                    network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+                    network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = false)))
                 }
                 EventState.POST -> {
-                    network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                    network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = true)))
                 }
             }
             TimingMode.PRE_TICK -> if (event.state == EventState.PRE) {
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = false)))
+                network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = true)))
             }
             TimingMode.POST_TICK -> if (event.state == EventState.POST) {
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = false)))
+                network.sendPacket(PlayerInputC2SPacket(player.input.playerInput.copy(sneak = true)))
             }
         }
     }

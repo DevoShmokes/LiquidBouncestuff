@@ -179,19 +179,19 @@ class ItemCategorization(
         if (slot.itemStack.isNothing()) {
             return emptyArray()
         }
+        val item = slot.itemStack.item
 
-        val specificItemFacets: Array<ItemFacet> = when (val item = slot.itemStack.item) {
+        val specificItemFacets: Array<ItemFacet> = when {
             // Treat animal armor as a normal item
-            is AnimalArmorItem -> arrayOf(ItemFacet(slot))
-            is ArmorItem -> arrayOf(ArmorItemFacet(slot, this.futureArmorToKeep, this.armorComparator))
-            is SwordItem -> arrayOf(SwordItemFacet(slot))
-            is BowItem -> arrayOf(BowItemFacet(slot))
-            is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
-            is ArrowItem -> arrayOf(ArrowItemFacet(slot))
-            is MiningToolItem -> arrayOf(MiningToolItemFacet(slot))
-            is FishingRodItem -> arrayOf(RodItemFacet(slot))
-            is ShieldItem -> arrayOf(ShieldItemFacet(slot))
-            is BlockItem -> {
+            item.isArmor -> arrayOf(ArmorItemFacet(slot, this.futureArmorToKeep, this.armorComparator))
+            item.isSword -> arrayOf(SwordItemFacet(slot))
+            item is BowItem -> arrayOf(BowItemFacet(slot))
+            item is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
+            item is ArrowItem -> arrayOf(ArrowItemFacet(slot))
+            item.isTool -> arrayOf(MiningToolItemFacet(slot))
+            item is FishingRodItem -> arrayOf(RodItemFacet(slot))
+            item is ShieldItem -> arrayOf(ShieldItemFacet(slot))
+            item is BlockItem -> {
                 if (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
                     && !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack)
                 ) {
@@ -200,15 +200,15 @@ class ItemCategorization(
                     arrayOf(ItemFacet(slot))
                 }
             }
-            Items.MILK_BUCKET -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 2)))
-            is BucketItem -> {
+            item == Items.MILK_BUCKET -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 2)))
+            item is BucketItem -> {
                 when (item.fluid) {
                     is WaterFluid -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 0)))
                     is LavaFluid -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 1)))
                     else -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 3)))
                 }
             }
-            is PotionItem -> {
+            item is PotionItem -> {
                 val areAllEffectsGood =
                     slot.itemStack.getPotionEffects()
                         .all { it.effectType in PotionItemFacet.GOOD_STATUS_EFFECTS }
@@ -219,20 +219,22 @@ class ItemCategorization(
                     arrayOf(ItemFacet(slot))
                 }
             }
-            is EnderPearlItem -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
-            Items.GOLDEN_APPLE -> {
+            item is EnderPearlItem -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
+            item == Items.GOLDEN_APPLE -> {
                 arrayOf(
                     FoodItemFacet(slot),
                     PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0)),
                 )
             }
-            Items.ENCHANTED_GOLDEN_APPLE -> {
+            item == Items.ENCHANTED_GOLDEN_APPLE -> {
                 arrayOf(
                     FoodItemFacet(slot),
                     PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1),
                 )
             }
-            Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> arrayOf(ThrowableItemFacet(slot))
+            item == Items.SNOWBALL || item == Items.EGG || item == Items.WIND_CHARGE -> {
+                arrayOf(ThrowableItemFacet(slot))
+            }
             else -> {
                 if (slot.itemStack.isFood) {
                     arrayOf(FoodItemFacet(slot))

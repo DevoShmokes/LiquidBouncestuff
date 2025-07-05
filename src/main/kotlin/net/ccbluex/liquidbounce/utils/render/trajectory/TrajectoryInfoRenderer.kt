@@ -22,8 +22,11 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
+import java.util.function.Predicate
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sin
 
 class TrajectoryInfoRenderer(
@@ -42,7 +45,7 @@ class TrajectoryInfoRenderer(
             entity: Entity,
             trajectoryInfo: TrajectoryInfo,
             rotation: Rotation,
-            partialTicks: Float = mc.renderTickCounter.getTickDelta(true)
+            partialTicks: Float = mc.renderTickCounter.getTickProgress(true)
         ): TrajectoryInfoRenderer {
             val yawRadians = rotation.yaw / 180f * Math.PI.toFloat()
             val pitchRadians = rotation.pitch / 180f * Math.PI.toFloat()
@@ -111,7 +114,7 @@ class TrajectoryInfoRenderer(
     ): HitResult? {
         var currTicks = 0
 
-        for (ignored in 0 until maxTicks) {
+        for (tick in 0 until maxTicks) {
             if (pos.y < world.bottomY) {
                 break
             }
@@ -120,7 +123,7 @@ class TrajectoryInfoRenderer(
 
             pos += velocity
 
-            val hitResult = checkForHits(prevPos, pos)
+            val hitResult = checkForHits(prevPos, pos, tick)
 
             if (hitResult != null) {
                 hitResult.second?.let {
@@ -153,7 +156,8 @@ class TrajectoryInfoRenderer(
 
     private fun checkForHits(
         posBefore: Vec3d,
-        posAfter: Vec3d
+        posAfter: Vec3d,
+        tick: Int
     ): Pair<HitResult, Vec3d?>? {
         val blockHitResult = world.raycast(
             RaycastContext(
@@ -168,25 +172,33 @@ class TrajectoryInfoRenderer(
             return blockHitResult to blockHitResult.pos
         }
 
-        val entityHitResult = ProjectileUtil.getEntityCollision(
+        val predicate = Predicate<Entity> {
+            val canCollide = !it.isSpectator && it.isAlive
+            val shouldCollide = it.canHit() || owner != mc.player && it == mc.player
+
+            return@Predicate canCollide && shouldCollide && !owner.isConnectedThroughVehicle(it)
+        }
+
+        val hitResult = ProjectileUtil.getEntityCollision(
             world,
             owner,
             posBefore,
             posAfter,
-            hitbox.offset(pos).stretch(velocity).expand(1.0)
-        ) {
-            val canCollide = !it.isSpectator && it.isAlive
-            val shouldCollide = it.canHit() || owner != mc.player && it == mc.player
+            hitbox.offset(pos).stretch(velocity).expand(1.0),
+            predicate,
+            getToleranceMargin(tick)
+        )
 
-            return@getEntityCollision canCollide && shouldCollide && !owner.isConnectedThroughVehicle(it)
-        }
+        return if (hitResult != null && hitResult.type != HitResult.Type.MISS) {
+            val hitPos = hitResult.entity.box.expand(trajectoryInfo.hitboxRadius).raycast(posBefore, posAfter)
 
-        return if (entityHitResult != null && entityHitResult.type != HitResult.Type.MISS) {
-            val hitPos = entityHitResult.entity.box.expand(trajectoryInfo.hitboxRadius).raycast(posBefore, posAfter)
-
-            entityHitResult to hitPos.getOrNull()
+            hitResult to hitPos.getOrNull()
         } else {
             null
         }
+    }
+
+    fun getToleranceMargin(age: Int): Float {
+        return max(0.0f, min(0.3f, (age - 2) / 20.0f))
     }
 }

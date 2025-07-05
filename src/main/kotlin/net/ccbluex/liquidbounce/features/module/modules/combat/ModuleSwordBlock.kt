@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ShieldItem
-import net.minecraft.item.SwordItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
 

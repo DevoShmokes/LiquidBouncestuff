@@ -19,14 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.inventory.armorItems
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 
-@Suppress("DataClassPrivateConstructor")
+@ConsistentCopyVisibility
 data class Nametag private constructor(
     val entity: Entity,
     /**
@@ -61,10 +63,8 @@ data class Nametag private constructor(
                 return emptyList()
             }
 
-            val itemIterator = entity.handItems.iterator()
-
-            val firstHandItem = itemIterator.next()
-            val secondHandItem = itemIterator.next()
+            val firstHandItem = entity.mainHandStack
+            val secondHandItem = entity.offHandStack
 
             val armorItems = entity.armorItems.reversed()
 

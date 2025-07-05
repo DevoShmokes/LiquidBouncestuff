@@ -21,8 +21,12 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot.ArmorType
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.item.ItemStack
 import net.minecraft.screen.ScreenHandler
 
 val ScreenHandler.isPlayerInventory: Boolean
@@ -40,3 +44,10 @@ val canCloseMainInventory
 
 val GenericContainerScreen?.syncId
     get() = this?.screenHandler?.syncId ?: 0
+
+val PlayerInventory.mainHandStack: ItemStack
+    get() = this.selectedStack
+
+
+val LivingEntity.armorItems: List<ItemStack>
+    get() = ArmorType.entries.map { getEquippedStack(it.equipmentSlot) }

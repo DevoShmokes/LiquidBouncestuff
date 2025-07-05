@@ -5,6 +5,7 @@ import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.direction
+import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.decoration.ArmorStandEntity
@@ -26,7 +27,7 @@ class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("Gri
      */
     @Suppress("unused")
     private val tickHandler = handler<PlayerTickEvent> {
-        if (player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f) {
+        if (player.input.movementVector.lengthSquared() > 0.0) {
             return@handler
         }
 
