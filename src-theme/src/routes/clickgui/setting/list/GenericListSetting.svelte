@@ -1,30 +1,24 @@
 <script lang="ts">
-    import {createEventDispatcher, onMount} from "svelte";
+    import {createEventDispatcher} from "svelte";
     import {slide} from "svelte/transition";
-    import type {ListSetting, ModuleSetting, RegistryItem} from "../../../../integration/types";
+    import type {ListSetting, ModuleSetting, NamedItem} from "../../../../integration/types";
     import VirtualList from "../list/VirtualList.svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import ExpandArrow from "../common/ExpandArrow.svelte";
     import {setItem} from "../../../../integration/persistent_storage";
     import ListItem from "./ListItem.svelte";
-    import {getRegistryItems} from "../../../../integration/rest";
 
     export let setting: ModuleSetting;
     export let path: string;
+    export let items: NamedItem[];
 
     const cSetting = setting as ListSetting;
     const thisPath = `${path}.${cSetting.name}`;
 
     const dispatch = createEventDispatcher();
-    let items: TItem[] = [];
-    let renderedItems: TItem[] = items;
+    let renderedItems: NamedItem[] = items;
     let searchQuery = "";
     let expanded = localStorage.getItem(thisPath) === "true";
-
-    interface TItem {
-        identifier: string;
-        name: string;
-    }
 
     $: setItem(thisPath, expanded.toString());
 
@@ -36,27 +30,11 @@
         renderedItems = filteredItems;
     }
 
-    onMount(async () => {
-        let registryName = cSetting.registry;
-        if (!registryName) {
-            return;
-        }
-
-        const registryItems: Record<string, RegistryItem> = await getRegistryItems(registryName);
-        items = Object.entries(registryItems)
-            .map(([identifier, item]) => ({
-                identifier,
-                name: item.name,
-                icon: item.icon
-            })) as TItem[];
-        items = items.sort((a, b) => a.identifier.localeCompare(b.identifier));
-    });
-
-    function handleItemToggle(e: CustomEvent<{ identifier: string, enabled: boolean }>) {
+    function handleItemToggle(e: CustomEvent<{ value: string, enabled: boolean }>) {
         if (e.detail.enabled) {
-            cSetting.value = [...cSetting.value, e.detail.identifier];
+            cSetting.value = [...cSetting.value, e.detail.value];
         } else {
-            cSetting.value = cSetting.value.filter(b => b !== e.detail.identifier);
+            cSetting.value = cSetting.value.filter(b => b !== e.detail.value);
         }
 
         setting = {...cSetting};
@@ -75,8 +53,8 @@
             <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery} spellcheck="false">
             <div class="results">
                 <VirtualList items={renderedItems} let:item>
-                    <ListItem identifier={item.identifier} name={item.name} icon={item.icon}
-                            enabled={cSetting.value.includes(item.identifier)} on:toggle={handleItemToggle}/>
+                    <ListItem value={item.value} name={item.name} icon={item.icon}
+                            enabled={cSetting.value.includes(item.value)} on:toggle={handleItemToggle}/>
                 </VirtualList>
             </div>
         </div>

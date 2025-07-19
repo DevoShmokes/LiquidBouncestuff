@@ -194,7 +194,24 @@ open class Configurable(
         name: String,
         defaultValue: T,
         valueType: ValueType
-    ) = ListValue(name, defaultValue, valueType, E::class.java).apply {
+    ) = ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java).apply {
+        this@Configurable.inner.add(this)
+    }
+
+    internal inline fun <T : MutableCollection<E>, reified E> mutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType
+    ) = MutableListValue(name, defaultValue, valueType, E::class.java).apply {
+        this@Configurable.inner.add(this)
+    }
+
+    internal inline fun <T : MutableSet<E>, reified E> itemList(
+        name: String,
+        defaultValue: T,
+        items: Set<ItemListValue.NamedItem<E>>,
+        valueType: ValueType
+    ) = ItemListValue(name, defaultValue, items, valueType, E::class.java).apply {
         this@Configurable.inner.add(this)
     }
 
@@ -252,8 +269,8 @@ open class Configurable(
 
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
-    fun <C : MutableCollection<String>> textArray(name: String, default: C) =
-        list(name, default, ValueType.TEXT)
+    fun <C : MutableCollection<String>> textList(name: String, default: C) =
+        mutableList<C, String>(name, default, ValueType.TEXT)
 
     fun curve(name: String, default: Easing) = enumChoice(name, default)
 

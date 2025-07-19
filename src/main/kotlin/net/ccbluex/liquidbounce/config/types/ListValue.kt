@@ -14,6 +14,11 @@ open class ListValue<T : MutableCollection<E>, E>(
     value: T,
 
     /**
+     * Not the type of [value] but the type of list.
+     */
+    valueType: ValueType = ValueType.LIST,
+
+    /**
      * Used to determine the type of the inner value.
      */
     @Exclude val innerValueType: ValueType = ValueType.INVALID,
@@ -28,7 +33,7 @@ open class ListValue<T : MutableCollection<E>, E>(
 ) : Value<T>(
     name,
     defaultValue = value,
-    valueType = ValueType.LIST,
+    valueType = valueType,
 ) {
 
     init {
@@ -65,6 +70,54 @@ open class ListValue<T : MutableCollection<E>, E>(
 
 }
 
+/**
+ * This allows users to input any kind of [E] value,
+ * so it might not deserialize correctly if the input cannot be
+ * converted to the [innerType].
+ *
+ * TODO: Implement support for input validation in the UI.
+ */
+open class MutableListValue<T : MutableCollection<E>, E>(
+    name: String,
+    value: T,
+    innerValueType: ValueType = ValueType.INVALID,
+    innerType: Class<E>,
+) : ListValue<T, E>(
+    name,
+    value,
+    ValueType.MUTABLE_LIST,
+    innerValueType,
+    innerType
+)
+
+open class ItemListValue<T : MutableSet<E>, E>(
+    name: String,
+    value: T,
+    var items: Set<NamedItem<E>>,
+    innerValueType: ValueType = ValueType.INVALID,
+    innerType: Class<E>,
+) : ListValue<T, E>(
+    name,
+    value,
+    ValueType.ITEM_LIST,
+    innerValueType,
+    innerType
+) {
+
+    init {
+        require(items.isNotEmpty()) {
+            "ItemListValue must have at least one item defined."
+        }
+    }
+
+    data class NamedItem<T>(
+        val name: String,
+        val value: T,
+        val icon: String? = null
+    )
+
+}
+
 open class RegistryListValue<T : MutableSet<E>, E>(
     name: String,
     value: T,
@@ -73,6 +126,7 @@ open class RegistryListValue<T : MutableSet<E>, E>(
 ) : ListValue<T, E>(
     name,
     value,
+    ValueType.REGISTRY_LIST,
     innerValueType,
     innerType
 ) {

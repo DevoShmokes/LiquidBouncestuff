@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.script.asArray
 import net.ccbluex.liquidbounce.script.asDoubleArray
@@ -42,14 +41,8 @@ import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.ccbluex.liquidbounce.utils.kotlin.mapArray
-import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
-import net.minecraft.item.Item
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
-import java.util.*
 import java.util.function.Supplier
-import kotlin.jvm.java
 import kotlin.reflect.KProperty
 import org.graalvm.polyglot.Value as PolyglotValue
 
@@ -439,6 +432,10 @@ enum class ValueType(
     CHOOSE(completer = AutoCompletionProvider.chooseCompleter),
     MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer),
     LIST(HumanInputDeserializer.listDeserializer),
+    MUTABLE_LIST(HumanInputDeserializer.listDeserializer),
+    ITEM_LIST(HumanInputDeserializer.listDeserializer),
+    REGISTRY_LIST(HumanInputDeserializer.listDeserializer),
+
     CONFIGURABLE,
     TOGGLEABLE,
 

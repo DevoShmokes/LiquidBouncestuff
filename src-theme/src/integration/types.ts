@@ -24,11 +24,12 @@ export type ModuleSetting =
     | ChooseSetting
     | MultiChooseSetting
     | ListSetting
+    | RegistryListSetting
+    | ItemListSetting
     | ConfigurableSetting
     | TogglableSetting
     | ColorSetting
     | TextSetting
-    | TextArraySetting
     | BindSetting
     | VectorSetting
     | KeySetting;
@@ -68,12 +69,6 @@ export interface VectorSetting {
     valueType: string;
     name: string;
     value: Vec3;
-}
-
-export interface TextArraySetting {
-    valueType: string;
-    name: string;
-    value: string[];
 }
 
 export interface ColorSetting {
@@ -166,7 +161,20 @@ export interface ListSetting {
     name: string;
     value: string[];
     innerValueType: string;
-    registry: string | undefined;
+}
+
+export interface RegistryListSetting extends ListSetting {
+    registry: string;
+}
+
+export interface ItemListSetting extends ListSetting {
+    items: NamedItem[];
+}
+
+export interface NamedItem {
+    name: string;
+    value: string;
+    icon: string | undefined;
 }
 
 export interface ConfigurableSetting {

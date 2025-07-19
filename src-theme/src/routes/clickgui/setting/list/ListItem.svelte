@@ -2,10 +2,10 @@
     import {createEventDispatcher} from "svelte";
 
     const dispatch = createEventDispatcher<{
-        toggle: { identifier: string, enabled: boolean }
+        toggle: { value: string, enabled: boolean }
     }>();
 
-    export let identifier: string;
+    export let value: string;
     export let name: string;
     export let icon: string | undefined;
     export let enabled: boolean;
@@ -13,9 +13,9 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="item" on:click={() => dispatch("toggle", {enabled: !enabled, identifier})}>
+<div class="item" on:click={() => dispatch("toggle", {enabled: !enabled, value:value})}>
     {#if icon}
-        <img class="icon" src="{icon}" alt={identifier}/>
+        <img class="icon" src="{icon}" alt={value}/>
     {:else}
         <!-- Fallback icon? -->
     {/if}

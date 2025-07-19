@@ -39,7 +39,7 @@ import net.minecraft.nbt.NbtCompound
 object ClientItemGroups : Configurable("tabs") {
 
     private var beenSetup = false
-    val containers by textArray("Containers", mutableListOf())
+    val containers by textList("Containers", mutableListOf())
 
     fun storeAsContainerItem(compound: NbtCompound) {
         val compoundString = compound.toString()
