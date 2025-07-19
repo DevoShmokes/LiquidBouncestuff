@@ -63,10 +63,10 @@ object HumanInputDeserializer {
 
         requireNotNull(block) { "Unknown block '$it'" }
     }
-    val blockListDeserializer: StringDeserializer<MutableList<Block>> = StringDeserializer {
-        parseArray(it, blockDeserializer)
-    }
-    val itemListDeserializer: StringDeserializer<MutableList<Item>> = StringDeserializer {
+
+    val listDeserializer: StringDeserializer<MutableList<Item>> = StringDeserializer {
+        // todo: automatically detect if blockDeserializer or itemDeserializer should be used
+
         parseArray(it, itemDeserializer)
     }
 

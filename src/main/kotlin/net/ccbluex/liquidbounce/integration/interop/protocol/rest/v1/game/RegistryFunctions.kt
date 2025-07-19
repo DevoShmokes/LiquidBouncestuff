@@ -40,6 +40,7 @@ import net.minecraft.registry.tag.ItemTags
 import net.minecraft.registry.tag.TagKey
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import java.util.Locale
 import kotlin.jvm.optionals.getOrNull
 
 private val ACCEPTED_ITEM_TAGS =
@@ -163,9 +164,9 @@ private fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagK
     return map
 }
 
-// GET /api/v1/client/registries
+// GET /api/v1/client/registry/:name
 @Suppress("UNUSED_PARAMETER")
-fun getRegistries(requestObject: RequestObject) = httpOk(JsonObject().apply {
+fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
     val parentMap = hashMapOf<Identifier, Identifier>()
     val world = mc.world ?: return httpForbidden("No world")
 
@@ -187,57 +188,61 @@ fun getRegistries(requestObject: RequestObject) = httpOk(JsonObject().apply {
         }
     }
 
-    add("blocks", JsonArray().apply {
-        Registries.BLOCK.forEach { block ->
-            val jsonObject = JsonObject().apply {
-                addProperty("identifier", Registries.BLOCK.getId(block).toString())
-                addProperty("name", block.name.convertToString())
-            }
-            add(jsonObject)
-        }
-    })
-    add("items", JsonArray().apply {
-        Registries.ITEM.forEach { item ->
-            val jsonObject = JsonObject().apply {
-                addProperty("identifier", Registries.ITEM.getId(item).toString())
-                addProperty("name", item.name.convertToString())
-            }
-            add(jsonObject)
-        }
-    })
-    add("itemGroups", JsonObject().apply {
-        for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS)) {
-            add(
-                k.toString(),
-                JsonObject().apply {
-                    addProperty("relation", "group")
-                    addProperty("relative", v.toString())
+    val registryName = requestObject.params["name"]
+        ?: return httpForbidden("Missing registry name parameter")
+    when (registryName.lowercase(Locale.ENGLISH)) {
+        "blocks" -> {
+            Registries.BLOCK.forEach { block ->
+                val id = Registries.BLOCK.getId(block).toString()
+                val jsonObject = JsonObject().apply {
+                    addProperty("name", block.name.convertToString())
                 }
-            )
-        }
-    })
-    add("blockGroups", JsonObject().apply {
-        val constructedMap = constructMap(Registries.BLOCK, ACCEPTED_BLOCK_TAGS)
-
-        Registries.BLOCK.forEach { block ->
-            val id = Registries.BLOCK.getId(block)
-
-            val obj = when (id) {
-                in parentMap -> JsonObject().apply {
-                    addProperty("relation", "parent")
-                    addProperty("relative", parentMap[id]!!.toString())
-                }
-
-                in constructedMap -> JsonObject().apply {
-                    addProperty("relation", "group")
-                    addProperty("relative", constructedMap[id]!!.toString())
-                }
-
-                else -> return@forEach
+                add(id, jsonObject)
             }
-
-            add(id.toString(), obj)
         }
-    })
+        "items" -> {
+            Registries.ITEM.forEach { item ->
+                val id = Registries.ITEM.getId(item).toString()
+                val jsonObject = JsonObject().apply {
+                    addProperty("name", item.name.convertToString())
+                }
+                add(id, jsonObject)
+            }
+        }
+        "itemgroups" -> {
+            for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS)) {
+                add(
+                    k.toString(),
+                    JsonObject().apply {
+                        addProperty("relation", "group")
+                        addProperty("relative", v.toString())
+                    }
+                )
+            }
+        }
+        "blockgroups" -> {
+            val constructedMap = constructMap(Registries.BLOCK, ACCEPTED_BLOCK_TAGS)
+
+            Registries.BLOCK.forEach { block ->
+                val id = Registries.BLOCK.getId(block)
+
+                val obj = when (id) {
+                    in parentMap -> JsonObject().apply {
+                        addProperty("relation", "parent")
+                        addProperty("relative", parentMap[id]!!.toString())
+                    }
+
+                    in constructedMap -> JsonObject().apply {
+                        addProperty("relation", "group")
+                        addProperty("relative", constructedMap[id]!!.toString())
+                    }
+
+                    else -> return@forEach
+                }
+
+                add(id.toString(), obj)
+            }
+        }
+        else -> return httpForbidden("Invalid registry name: $registryName")
+    }
 })
-

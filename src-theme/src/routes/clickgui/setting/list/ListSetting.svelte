@@ -1,50 +1,68 @@
 <script lang="ts">
     import {createEventDispatcher, onDestroy, onMount} from "svelte";
     import {slide} from "svelte/transition";
-    import type {BlocksSetting, ModuleSetting} from "../../../../integration/types";
-    import {getRegistries} from "../../../../integration/rest";
-    import Block from "./Block.svelte";
-    import VirtualList from "./VirtualList.svelte";
+    import type {ListSetting, ModuleSetting, RegistryItem} from "../../../../integration/types";
+    import VirtualList from "../list/VirtualList.svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import ExpandArrow from "../common/ExpandArrow.svelte";
     import {setItem} from "../../../../integration/persistent_storage";
+    import ListItem from "./ListItem.svelte";
+    import {getRegistryItems} from "../../../../integration/rest";
+    import {REST_BASE} from "../../../../integration/host";
 
     export let setting: ModuleSetting;
     export let path: string;
 
-    const cSetting = setting as BlocksSetting;
+    const cSetting = setting as ListSetting;
     const thisPath = `${path}.${cSetting.name}`;
 
-    interface TBlock {
-        name: string;
-        identifier: string;
-    }
-
     const dispatch = createEventDispatcher();
-    let blocks: TBlock[] = [];
-    let renderedBlocks: TBlock[] = blocks;
+    let items: TItem[] = [];
+    let renderedItems: TItem[] = items;
     let searchQuery = "";
     let expanded = localStorage.getItem(thisPath) === "true";
+
+    interface TItem {
+        identifier: string;
+        name: string;
+    }
 
     $: setItem(thisPath, expanded.toString());
 
     $: {
-        let filteredBlocks = blocks;
+        let filteredItems = items;
         if (searchQuery) {
-            filteredBlocks = filteredBlocks.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
+            filteredItems = filteredItems.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
         }
-        renderedBlocks = filteredBlocks;
+        renderedItems = filteredItems;
     }
 
     onMount(async () => {
-        let b = (await getRegistries()).blocks;
-
-        if (b !== undefined) {
-            blocks = b.sort((a, b) => a.identifier.localeCompare(b.identifier));
+        let registryName;
+        console.log(cSetting.innerValueType);
+        switch (cSetting.innerValueType) {
+            case "BLOCK":
+                registryName = "blocks";
+                break;
+            case "ITEM":
+                registryName = "items";
+                break;
+            default:
+                console.warn(`Unknown inner value type: ${cSetting.innerValueType}`);
+                return;
         }
+
+        const registryItems: Record<string, RegistryItem> = await getRegistryItems(registryName);
+        items = Object.entries(registryItems)
+            .map(([identifier, item]) => ({
+                identifier,
+                name: item.name,
+                icon: `${REST_BASE}/api/v1/client/resource/itemTexture?id=${identifier}`
+            })) as TItem[];
+        items = items.sort((a, b) => a.identifier.localeCompare(b.identifier));
     });
 
-    function handleBlockToggle(e: CustomEvent<{ identifier: string, enabled: boolean }>) {
+    function handleItemToggle(e: CustomEvent<{ identifier: string, enabled: boolean }>) {
         if (e.detail.enabled) {
             cSetting.value = [...cSetting.value, e.detail.identifier];
         } else {
@@ -66,9 +84,9 @@
         <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
             <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery} spellcheck="false">
             <div class="results">
-                <VirtualList items={renderedBlocks} let:item>
-                    <Block identifier={item.identifier} name={item.name}
-                           enabled={cSetting.value.includes(item.identifier)} on:toggle={handleBlockToggle}/>
+                <VirtualList items={renderedItems} let:item>
+                    <ListItem identifier={item.identifier} name={item.name} icon={item.icon}
+                            enabled={cSetting.value.includes(item.identifier)} on:toggle={handleItemToggle}/>
                 </VirtualList>
             </div>
         </div>

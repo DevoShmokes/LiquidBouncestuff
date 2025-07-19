@@ -16,8 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.types
+package net.ccbluex.liquidbounce.config.types.nesting
 
+import net.ccbluex.liquidbounce.config.types.BindValue
+import net.ccbluex.liquidbounce.config.types.ChooseListValue
+import net.ccbluex.liquidbounce.config.types.ListValue
+import net.ccbluex.liquidbounce.config.types.MultiChooseEnumListValue
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.RangedValue
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -185,16 +193,27 @@ open class Configurable(
         name: String,
         defaultValue: T,
         valueType: ValueType = ValueType.INVALID,
-        listType: ListValueType = ListValueType.None
-    ) = Value(name, defaultValue = defaultValue, valueType = valueType, listType = listType).apply {
+    ) = Value(name, defaultValue = defaultValue, valueType = valueType).apply {
         this@Configurable.inner.add(this)
     }
 
-    fun <T : Any> rangedValue(name: String, defaultValue: T, range: ClosedRange<*>, suffix: String,
-                              valueType: ValueType) =
-        RangedValue(name, defaultValue = defaultValue, range = range, suffix = suffix, valueType = valueType).apply {
-            this@Configurable.inner.add(this)
-        }
+    internal inline fun <T : MutableCollection<E>, reified E> listValue(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType
+    ) = ListValue(name, defaultValue, valueType, E::class.java).apply {
+        this@Configurable.inner.add(this)
+    }
+
+    fun <T : Any> rangedValue(
+        name: String,
+        defaultValue: T,
+        range: ClosedRange<*>,
+        suffix: String,
+        valueType: ValueType
+    ) = RangedValue(name, defaultValue = defaultValue, range = range, suffix = suffix, valueType = valueType).apply {
+        this@Configurable.inner.add(this)
+    }
 
     // Fixed data types
 
@@ -233,7 +252,7 @@ open class Configurable(
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
     fun <C : MutableCollection<String>> textArray(name: String, default: C) =
-        value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
+        listValue(name, default, ValueType.TEXT)
 
     fun curve(name: String, default: Easing) = enumChoice(name, default)
 
@@ -246,12 +265,12 @@ open class Configurable(
     fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR_D)
 
     fun <C : MutableCollection<Block>> blocks(name: String, default: C) =
-        value(name, default, ValueType.BLOCKS, ListValueType.Block)
+        listValue(name, default, ValueType.BLOCK)
 
     fun item(name: String, default: Item) = value(name, default, ValueType.ITEM)
 
     fun <C : MutableCollection<Item>> items(name: String, default: C) =
-        value(name, default, ValueType.ITEMS, ListValueType.Item)
+        listValue(name, default, ValueType.ITEM)
 
     inline fun <reified T> multiEnumChoice(
         name: String,

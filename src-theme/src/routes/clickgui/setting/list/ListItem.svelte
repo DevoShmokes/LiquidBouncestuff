@@ -1,5 +1,4 @@
 <script lang="ts">
-    import {REST_BASE} from "../../../../integration/host";
     import {createEventDispatcher} from "svelte";
 
     const dispatch = createEventDispatcher<{
@@ -8,13 +7,18 @@
 
     export let identifier: string;
     export let name: string;
+    export let icon: string | undefined;
     export let enabled: boolean;
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="block" on:click={() => dispatch("toggle", {enabled: !enabled, identifier})}>
-    <img class="icon" src="{REST_BASE}/api/v1/client/resource/itemTexture?id={identifier}" alt={identifier}/>
+<div class="item" on:click={() => dispatch("toggle", {enabled: !enabled, identifier})}>
+    {#if icon}
+        <img class="icon" src="{icon}" alt={identifier}/>
+    {:else}
+        <!-- Fallback icon? -->
+    {/if}
     <div class="name">{name}</div>
     <div class="tick">
         {#if enabled}
@@ -28,7 +32,7 @@
 <style lang="scss">
   @use "../../../../colors.scss" as *;
 
-  .block {
+  .item {
     display: grid;
     grid-template-columns: max-content 1fr max-content;
     align-items: center;

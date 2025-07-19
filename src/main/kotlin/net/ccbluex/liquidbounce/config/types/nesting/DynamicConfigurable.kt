@@ -16,9 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.config.types
+package net.ccbluex.liquidbounce.config.types.nesting
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.ValueType
 
 /**
  * A dynamic configurable that can create instances of values that are not yet present.

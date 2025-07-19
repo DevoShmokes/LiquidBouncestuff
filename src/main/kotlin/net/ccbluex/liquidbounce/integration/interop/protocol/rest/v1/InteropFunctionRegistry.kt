@@ -145,7 +145,7 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     get("/crosshair", ::getCrosshairData)
 
     // Registry Functions
-    get("/registries", ::getRegistries)
+    get("/registry/:name", ::getRegistry)
 
     // ServerList Functions
     get("/servers", ::getServers).apply {
