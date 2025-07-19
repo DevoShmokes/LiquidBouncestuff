@@ -22,8 +22,10 @@ import com.mojang.brigadier.StringReader
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
+import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
+import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 import java.awt.Color
 import java.util.*
@@ -74,6 +76,18 @@ object HumanInputDeserializer {
         val block = Registries.ITEM.getOptionalValue(Identifier.fromCommandInput(StringReader(it))).getOrNull()
 
         requireNotNull(block) { "Unknown item '$it'" }
+    }
+
+    val soundDeserializer: StringDeserializer<SoundEvent> = StringDeserializer {
+        val sound = Registries.SOUND_EVENT.getOptionalValue(Identifier.fromCommandInput(StringReader(it))).getOrNull()
+
+        requireNotNull(sound) { "Unknown sound '$it'" }
+    }
+
+    val statusEffectDeserializer: StringDeserializer<StatusEffect> = StringDeserializer {
+        val effect = Registries.STATUS_EFFECT.getOptionalValue(Identifier.fromCommandInput(StringReader(it))).getOrNull()
+
+        requireNotNull(effect) { "Unknown status effect '$it'" }
     }
 
     val keyDeserializer: StringDeserializer<InputUtil.Key> = StringDeserializer(::inputByName)

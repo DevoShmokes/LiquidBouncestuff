@@ -28,11 +28,13 @@ import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.toName
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.item.BlockItem
+import net.minecraft.item.Items
 import net.minecraft.registry.DefaultedRegistry
 import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.BlockTags
@@ -170,6 +172,9 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
     val parentMap = hashMapOf<Identifier, Identifier>()
     val world = mc.world ?: return httpForbidden("No world")
 
+    fun iconUrl(id: Identifier) =
+        "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id"
+
     Registries.BLOCK.forEach {
         val pickStack = it.getPickStack(world, BlockPos.ORIGIN, it.defaultState, false)
         val id = Registries.BLOCK.getId(it)
@@ -193,22 +198,46 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
     when (registryName.lowercase(Locale.ENGLISH)) {
         "blocks" -> {
             Registries.BLOCK.forEach { block ->
-                val id = Registries.BLOCK.getId(block).toString()
+                val id = Registries.BLOCK.getId(block)
                 val jsonObject = JsonObject().apply {
                     addProperty("name", block.name.convertToString())
-                    addProperty("icon", "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id")
+                    addProperty("icon", iconUrl(id))
                 }
-                add(id, jsonObject)
+                add(id.toString(), jsonObject)
             }
         }
         "items" -> {
             Registries.ITEM.forEach { item ->
-                val id = Registries.ITEM.getId(item).toString()
+                val id = Registries.ITEM.getId(item)
                 val jsonObject = JsonObject().apply {
                     addProperty("name", item.name.convertToString())
-                    addProperty("icon", "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id")
+                    addProperty("icon", iconUrl(id))
                 }
-                add(id, jsonObject)
+                add(id.toString(), jsonObject)
+            }
+        }
+        "sounds" -> {
+            val soundDiscId = Registries.ITEM.getId(Items.MUSIC_DISC_13)
+
+            Registries.SOUND_EVENT.forEach { soundEvent ->
+                val id = Registries.SOUND_EVENT.getId(soundEvent)
+                val jsonObject = JsonObject().apply {
+                    addProperty("name", soundEvent.id.toName())
+                    addProperty("icon", iconUrl(soundDiscId))
+                }
+                add(id.toString(), jsonObject)
+            }
+        }
+        "statuseffects" -> {
+            val potionId = Registries.ITEM.getId(Items.POTION)
+
+            Registries.STATUS_EFFECT.forEach { effect ->
+                val id = Registries.STATUS_EFFECT.getId(effect)
+                val jsonObject = JsonObject().apply {
+                    addProperty("name", effect.name.convertToString())
+                    addProperty("icon", iconUrl(potionId))
+                }
+                add(id.toString(), jsonObject)
             }
         }
         "itemgroups" -> {

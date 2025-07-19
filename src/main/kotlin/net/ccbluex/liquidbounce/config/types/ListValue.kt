@@ -138,6 +138,8 @@ open class RegistryListValue<T : MutableSet<E>, E>(
     var registry: String = when (innerValueType) {
         ValueType.BLOCK -> "blocks"
         ValueType.ITEM -> "items"
+        ValueType.SOUND -> "sounds"
+        ValueType.STATUS_EFFECT -> "statuseffects"
         else -> error("Unsupported registry type: $innerValueType")
     }
 

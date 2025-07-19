@@ -422,6 +422,8 @@ enum class ValueType(
     COLOR(HumanInputDeserializer.colorDeserializer),
     BLOCK(HumanInputDeserializer.blockDeserializer),
     ITEM(HumanInputDeserializer.itemDeserializer),
+    SOUND(HumanInputDeserializer.soundDeserializer),
+    STATUS_EFFECT(HumanInputDeserializer.statusEffectDeserializer),
     KEY(HumanInputDeserializer.keyDeserializer),
     BIND,
     VECTOR_I,

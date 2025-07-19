@@ -28,7 +28,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.toEnumSet
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.block.Block
 import net.minecraft.client.util.InputUtil
+import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.item.Item
+import net.minecraft.sound.SoundEvent
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.lwjgl.glfw.GLFW
@@ -289,6 +291,12 @@ open class Configurable(
 
     fun <C : MutableSet<Item>> items(name: String, default: C) =
         registryList(name, default, ValueType.ITEM)
+
+    fun <C : MutableSet<SoundEvent>> sounds(name: String, default: C) =
+        registryList(name, default, ValueType.SOUND)
+
+    fun <C : MutableSet<StatusEffect>> statusEffects(name: String, default: C) =
+        registryList(name, default, ValueType.STATUS_EFFECT)
 
     inline fun <reified T> multiEnumChoice(
         name: String,
