@@ -93,7 +93,7 @@ open class MutableListValue<T : MutableCollection<E>, E>(
 open class ItemListValue<T : MutableSet<E>, E>(
     name: String,
     value: T,
-    var items: Set<NamedItem<E>>,
+    @Exclude var items: Set<NamedItem<E>>,
     innerValueType: ValueType = ValueType.INVALID,
     innerType: Class<E>,
 ) : ListValue<T, E>(
