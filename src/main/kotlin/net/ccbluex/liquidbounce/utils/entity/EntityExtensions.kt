@@ -663,3 +663,33 @@ fun ClientPlayerEntity.getFeetBlockPos(): BlockPos {
         MathHelper.floor(MathHelper.lerp(0.5, bb.minZ, bb.maxZ))
     )
 }
+
+/**
+ * Raycasts downwards from the player's position to find the block directly below them.
+ * Should return the exact Vec3d position of the position the player would be standing on,
+ * or null if no block is found below.
+ */
+fun ClientPlayerEntity.getBottomPos(
+    distance: Double? = null,
+): Vec3d? {
+    val distance = distance ?: (this.world.bottomY - this.pos.y)
+
+    val start = this.pos.add(0.0, 0.1, 0.0)
+    val end = start.add(0.0, distance, 0.0)
+
+    val hitResult = world.raycast(
+        RaycastContext(
+            start,
+            end,
+            RaycastContext.ShapeType.COLLIDER,
+            RaycastContext.FluidHandling.NONE,
+            ShapeContext.of(this)
+        )
+    )
+
+    return if (hitResult.type == HitResult.Type.BLOCK) {
+        hitResult.pos
+    } else {
+        null
+    }
+}
