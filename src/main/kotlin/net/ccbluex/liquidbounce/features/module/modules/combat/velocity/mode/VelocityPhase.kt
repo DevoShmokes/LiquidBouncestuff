@@ -88,14 +88,6 @@ object VelocityPhase : VelocityMode("Phase") {
             // The code above does nothing on POST
             event.state == EventState.PRE
         }
-
-        until<QueuePacketEvent> { event ->
-            if (event.origin == TransferOrigin.OUTGOING) {
-                event.action = PacketQueueManager.Action.QUEUE
-            }
-
-            event.packet is CommonPongC2SPacket
-        }
         return true
     }
 
