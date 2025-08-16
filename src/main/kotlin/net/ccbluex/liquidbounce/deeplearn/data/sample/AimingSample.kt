@@ -1,4 +1,23 @@
-package net.ccbluex.liquidbounce.deeplearn.data
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.deeplearn.data.sample
 
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.gson.util.decode
@@ -7,8 +26,7 @@ import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import java.io.File
 
-@JvmRecord
-data class TrainingData(
+data class AimingSample(
     @SerializedName(CURRENT_DIRECTION_VECTOR)
     val currentVector: Vec3d,
     @SerializedName(PREVIOUS_DIRECTION_VECTOR)
@@ -34,7 +52,7 @@ data class TrainingData(
      */
     @SerializedName(AGE)
     val age: Int
-) {
+) : Sample<AimingSample> {
 
     val currentRotation
         get() = Rotation.fromRotationVec(currentVector)
@@ -57,6 +75,7 @@ data class TrainingData(
     val previousVelocityDelta
         get() = previousRotation.rotationDeltaTo(currentRotation)
 
+    @Deprecated("Use toInput instead", ReplaceWith("toInput()"))
     val asInput: FloatArray
         get() = floatArrayOf(
             // Total Delta
@@ -71,16 +90,25 @@ data class TrainingData(
             targetDiff.horizontalLength().toFloat() + playerDiff.horizontalLength().toFloat(),
 
             // Distance
-            distance.toFloat()
+            distance
         )
 
+    @Deprecated("Use toOutput instead", ReplaceWith("toOutput()"))
     val asOutput
         get() = floatArrayOf(
             velocityDelta.x,
             velocityDelta.y
         )
 
+    override val inputSize = 6
+    override val outputSize = 2
+
+    override fun toInput(previous: AimingSample?) = asInput
+
+    override fun toOutput(previous: AimingSample?) = asOutput
+
     companion object {
+
         const val CURRENT_DIRECTION_VECTOR = "a"
         const val PREVIOUS_DIRECTION_VECTOR = "b"
         const val TARGET_DIRECTION_VECTOR = "c"
@@ -91,14 +119,13 @@ data class TrainingData(
         const val T_DIFF = "h"
         const val DISTANCE = "i"
 
-        private fun parse(file: File): List<TrainingData> = when {
+        private fun parse(file: File): List<AimingSample> = when {
             file.isDirectory -> file.listFiles().flatMap(::parse)
-            file.extension == "json" -> decode<List<TrainingData>>(file.inputStream())
+            file.extension == "json" -> decode<List<AimingSample>>(file.inputStream())
             else -> emptyList()
         }
 
-        fun parse(vararg files: File): List<TrainingData> = files.flatMap(::parse)
+        fun parse(vararg files: File): List<AimingSample> = files.flatMap(::parse)
 
     }
 }
-

@@ -22,7 +22,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
+import net.ccbluex.liquidbounce.deeplearn.data.sample.AimingSample
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -52,7 +52,7 @@ import net.minecraft.util.math.Box
 /**
  * Records combat behavior
  */
-object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("MinaraiCombat") {
+object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<AimingSample>("MinaraiCombat") {
 
     private var targetTracker = tree(TargetTracker(
         // Start tracking target that we look at the closest
@@ -64,7 +64,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
     private var previous: Rotation = Rotation(0f, 0f)
 
     private val fightMap = Int2ObjectOpenHashMap<Fight>()
-    private val trainingCollection = Int2ObjectOpenHashMap<MutableList<TrainingData>>()
+    private val trainingCollection = Int2ObjectOpenHashMap<MutableList<AimingSample>>()
 
     private var targetEntityId: Int? = null
 
@@ -113,7 +113,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
             val fight = fightMap.getOrPut(target.id, ::Fight)
             val buffer = trainingCollection.getOrPut(target.id, ::ArrayList)
 
-            buffer.add(TrainingData(
+            buffer.add(AimingSample(
                 currentVector = current.directionVector,
                 previousVector = previous.directionVector,
                 targetVector = targetRotation.directionVector,
@@ -148,7 +148,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
 
         // Wait until entity is not in combat
         var inactivity = 0
-        var buffer: MutableList<TrainingData>? = null
+        var buffer: MutableList<AimingSample>? = null
         waitUntil {
             if (entity.isDead || entity.isRemoved || doNotTrack) {
                 return@waitUntil true

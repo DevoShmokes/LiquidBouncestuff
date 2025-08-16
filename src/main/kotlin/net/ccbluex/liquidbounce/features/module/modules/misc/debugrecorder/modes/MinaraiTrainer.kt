@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 
-import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
+import net.ccbluex.liquidbounce.deeplearn.data.sample.AimingSample
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -43,7 +43,7 @@ import kotlin.random.Random
 /**
  * Simulates scenarios where the player is training to hit a target.
  */
-object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("MinaraiTrainer") {
+object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<AimingSample>("MinaraiTrainer") {
 
     private var isFirstRun = true
 
@@ -83,7 +83,7 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
                 }
                 val distance = player.squaredBoxedDistanceTo(target).toFloat()
 
-                recordPacket(TrainingData(
+                recordPacket(AimingSample(
                     currentVector = current.directionVector,
                     previousVector = previous.directionVector,
                     targetVector = Rotation.lookingAt(point = target.box.center, from = player.eyePos).directionVector,

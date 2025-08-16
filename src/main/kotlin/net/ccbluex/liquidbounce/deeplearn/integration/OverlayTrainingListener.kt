@@ -18,7 +18,7 @@
  *
  *
  */
-package net.ccbluex.liquidbounce.deeplearn.listener
+package net.ccbluex.liquidbounce.deeplearn.integration
 
 import ai.djl.training.Trainer
 import ai.djl.training.listener.TrainingListener

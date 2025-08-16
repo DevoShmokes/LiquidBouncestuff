@@ -41,7 +41,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
-import net.ccbluex.liquidbounce.deeplearn.listener.OverlayTrainingListener
+import net.ccbluex.liquidbounce.deeplearn.data.DataSet
+import net.ccbluex.liquidbounce.deeplearn.integration.OverlayTrainingListener
 import java.io.Closeable
 import java.io.InputStream
 import java.nio.file.Path
@@ -71,8 +72,11 @@ abstract class ModelWrapper<I, O>(
         return predictor.predict(input)
     }
 
-    fun train(features: Array<FloatArray>, labels: Array<FloatArray>) {
+    fun train(dataset: DataSet) {
         require(DeepLearningEngine.isInitialized) { "DeepLearningEngine is not initialized" }
+
+        val features = dataset.features
+        val labels = dataset.labels
 
         require(features.size == labels.size) { "Features and labels must have the same size" }
         require(features.isNotEmpty()) { "Features and labels must not be empty" }

@@ -25,7 +25,8 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster.models
-import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
+import net.ccbluex.liquidbounce.deeplearn.data.DataSet
+import net.ccbluex.liquidbounce.deeplearn.data.sample.AimingSample
 import net.ccbluex.liquidbounce.deeplearn.models.MinaraiModel
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
@@ -160,7 +161,7 @@ object CommandModels : CommandFactory {
 
     private fun trainModel(command: Command, name: String, model: MinaraiModel? = null) = runCatching {
         val (samples, sampleTime) = measureTimedValue {
-            TrainingData.parse(
+            AimingSample.parse(
                 // Combat data
                 MinaraiCombatRecorder.folder,
                 // Trainer data
@@ -175,21 +176,15 @@ object CommandModels : CommandFactory {
 
         chat(command.result("samplesLoaded", samples.size, sampleTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
-        @Suppress("ArrayInDataClass")
-        data class Dataset(val features: Array<FloatArray>, val labels: Array<FloatArray>)
-
         val (dataset, datasetTime) = measureTimedValue {
-            Dataset(
-                samples.mapArray(TrainingData::asInput),
-                samples.mapArray(TrainingData::asOutput)
-            )
+            DataSet.fromSamples(samples)
         }
 
         chat(command.result("preparedData", datasetTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
         val trainingTime = measureTime {
             val model = model ?: MinaraiModel(name, models).also { model -> models.choices.add(model) }
-            model.train(dataset.features, dataset.labels)
+            model.train(dataset)
             model.save()
 
             models.setByString(model.name)
