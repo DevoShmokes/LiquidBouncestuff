@@ -50,7 +50,7 @@ import net.minecraft.util.math.Box
 /**
  * Records combat behavior
  */
-object AimingInCombatRecorder : ModuleSampleRecorder.DebugRecorderMode<AimingSample>("AimingInCombat") {
+object AimingInCombatRecorder : ModuleSampleRecorder.RecorderMode<AimingSample>("AimingInCombat") {
 
     private var targetTracker = tree(TargetTracker(
         // Start tracking target that we look at the closest
@@ -175,7 +175,7 @@ object AimingInCombatRecorder : ModuleSampleRecorder.DebugRecorderMode<AimingSam
         trainingCollection.remove(entity.id)
 
         val sampleBuffer = buffer ?: return@sequenceHandler
-        sampleBuffer.forEach(::recordPacket)
+        sampleBuffer.forEach(::recordSample)
         chat("Recorded ${sampleBuffer.size} samples for ${entity.name.string}".asText())
     }
 

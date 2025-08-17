@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes
 
-import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -28,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.allowsCriticalHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
@@ -138,19 +137,13 @@ object CriticalsJump : Choice("Jump") {
             player.pos to target.pos
         }
 
-        ModuleDebug.debugParameter(ModuleCriticals, "timeToCrit", ticksTillCrit)
-
-        GenericDebugRecorder.recordDebugInfo(ModuleCriticals, "critEstimation", JsonObject().apply {
-            addProperty("ticksTillCrit", ticksTillCrit)
-            addProperty("damageOnCrit", damageOnCrit)
-            addProperty("damageLostWaiting", damageLostWaiting)
-            add("player", GenericDebugRecorder.debugObject(player))
-            add("target", GenericDebugRecorder.debugObject(target))
-            addProperty("simulatedPlayerPos", simulatedPlayerPos.toString())
-            addProperty("simulatedTargetPos", simulatedTargetPos.toString())
-        })
-
-        GenericDebugRecorder.debugEntityIn(target, ticksTillCrit.toInt())
+        ModuleCriticals.debugParameter("TimeToCrit") { ticksTillCrit }
+        ModuleCriticals.debugParameter("DamageOnCrit") { damageOnCrit }
+        ModuleCriticals.debugParameter("DamageLostWaiting") { damageLostWaiting }
+        ModuleCriticals.debugParameter("SimulatedPlayerPos") { simulatedPlayerPos.toString() }
+        ModuleCriticals.debugParameter("SimulatedTargetPos") { simulatedTargetPos.toString() }
+        ModuleCriticals.debugParameter("Target") { target.nameForScoreboard }
+        ModuleCriticals.debugParameter("TargetPos") { target.pos.toString() }
 
         if (damageOnCrit <= damageLostWaiting) {
             return false

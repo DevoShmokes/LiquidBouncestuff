@@ -41,7 +41,7 @@ import kotlin.random.Random
 /**
  * Simulates scenarios where the player is training to hit a target.
  */
-object AimingTrainer : ModuleSampleRecorder.DebugRecorderMode<AimingSample>("AimingTrainer") {
+object AimingTrainer : ModuleSampleRecorder.RecorderMode<AimingSample>("AimingTrainer") {
 
     private var isFirstRun = true
 
@@ -81,7 +81,7 @@ object AimingTrainer : ModuleSampleRecorder.DebugRecorderMode<AimingSample>("Aim
                 }
                 val distance = player.squaredBoxedDistanceTo(target).toFloat()
 
-                recordPacket(AimingSample(
+                recordSample(AimingSample(
                     currentVector = current.directionVector,
                     previousVector = previous.directionVector,
                     targetVector = Rotation.lookingAt(point = target.box.center, from = player.eyePos).directionVector,
@@ -96,7 +96,7 @@ object AimingTrainer : ModuleSampleRecorder.DebugRecorderMode<AimingSample>("Aim
                 false
             }
 
-            chat("✧ Recorded ${packets.size} samples")
+            chat("✧ Recorded ${samples.size} samples")
         }
     }
 

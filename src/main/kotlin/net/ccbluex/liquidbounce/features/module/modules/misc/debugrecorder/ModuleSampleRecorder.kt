@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import java.time.LocalDateTime
+import java.util.*
 
 object ModuleSampleRecorder : ClientModule("SampleRecorder", Category.MISC, disableOnQuit = true) {
 
@@ -49,30 +50,34 @@ object ModuleSampleRecorder : ClientModule("SampleRecorder", Category.MISC, disa
         ClickingRecorder,
     ))
 
-    abstract class DebugRecorderMode<T : Sample<*>>(name: String) : Choice(name) {
+    abstract class RecorderMode<T : Sample<*>>(name: String) : Choice(name) {
         override val parent: ChoiceConfigurable<*>
             get() = modes
 
-        val folder = ConfigSystem.rootFolder.resolve("samples/$name").apply {
+        val folder = ConfigSystem.rootFolder.resolve("samples/${name.lowercase(Locale.US)}").apply {
             mkdirs()
         }
-        internal val packets = mutableListOf<T>()
+        internal val samples = mutableListOf<T>()
 
-        protected fun recordPacket(packet: T) {
+        protected fun recordSample(packet: T) {
             if (!this.isSelected) {
                 return
             }
 
-            packets.add(packet)
+            samples.add(packet)
+        }
+
+        protected fun getLastSample(): T? {
+            return samples.lastOrNull()
         }
 
         override fun enable() {
-            this.packets.clear()
+            this.samples.clear()
             chat(regular("Recording "), variable(name), regular("..."))
         }
 
         override fun disable() {
-            if (this.packets.isEmpty()) {
+            if (this.samples.isEmpty()) {
                 chat(regular("No packets recorded."))
                 return
             }
@@ -90,7 +95,7 @@ object ModuleSampleRecorder : ClientModule("SampleRecorder", Category.MISC, disa
                 }
 
                 file.bufferedWriter().use { writer ->
-                    publicGson.toJson(this.packets, writer)
+                    publicGson.toJson(this.samples, writer)
                 }
                 file.absolutePath
             }.onFailure {
@@ -104,7 +109,7 @@ object ModuleSampleRecorder : ClientModule("SampleRecorder", Category.MISC, disa
                 chat(regular("Log was written to "), text, regular("."))
             }
 
-            this.packets.clear()
+            this.samples.clear()
         }
     }
 }

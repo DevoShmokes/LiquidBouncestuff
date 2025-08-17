@@ -23,18 +23,18 @@ import net.ccbluex.liquidbounce.config.gson.util.decode
 import java.io.File
 
 data class ClickingSample(
-    val elapsed: Long,
-    val time: Int
+    val elapsed: Long
 ) : Sample<ClickingSample> {
 
-    override val inputSize = 2
-    override val outputSize = 1
+    override fun toInput(previous: ClickingSample) = floatArrayOf(
+        elapsed.normalize()
+    )
 
-    override fun toInput(previous: ClickingSample?) {
+    override fun toOutput(previous: ClickingSample) = floatArrayOf(
+        (elapsed - previous.elapsed).normalize()
+    )
 
-    }
-
-    override fun toOutput(previous: ClickingSample?) = asOutput
+    private fun Long.normalize() = this / 1000f
 
     companion object {
 

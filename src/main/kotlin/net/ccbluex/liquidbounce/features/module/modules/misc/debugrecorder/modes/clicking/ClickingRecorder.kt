@@ -23,17 +23,34 @@ import net.ccbluex.liquidbounce.deeplearn.data.sample.ClickingSample
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleSampleRecorder
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
 import org.lwjgl.glfw.GLFW
 
-object ClickingRecorder : ModuleSampleRecorder.DebugRecorderMode<ClickingSample>("Clicking") {
+object ClickingRecorder : ModuleSampleRecorder.RecorderMode<ClickingSample>("Clicking") {
+
+    private var startTime = 0L
 
     @Suppress("unused")
     private val mouseHandler = handler<MouseButtonEvent> { event ->
-        if (event.button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (event.button != GLFW.GLFW_MOUSE_BUTTON_LEFT || event.action != GLFW.GLFW_PRESS) {
             return@handler
         }
 
+        var elapsed = System.currentTimeMillis() - startTime
+        val lastClick = getLastSample()
 
+        // If the last click was more than 1 second ago,
+        // reset the start time
+        if (lastClick == null || elapsed - lastClick.elapsed > 1000) {
+            startTime = System.currentTimeMillis()
+            elapsed = 0L
+            chat(regular("Starting new clicking sample cycle."))
+        }
+
+        val sample = ClickingSample(elapsed)
+        recordSample(sample)
+        chat(regular("Recorded clicking sample: ${sample.elapsed}ms"))
     }
 
 }

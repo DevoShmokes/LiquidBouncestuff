@@ -100,12 +100,9 @@ data class AimingSample(
             velocityDelta.y
         )
 
-    override val inputSize = 6
-    override val outputSize = 2
+    override fun toInput(previous: AimingSample) = asInput
 
-    override fun toInput(previous: AimingSample?) = asInput
-
-    override fun toOutput(previous: AimingSample?) = asOutput
+    override fun toOutput(previous: AimingSample) = asOutput
 
     companion object {
 

@@ -20,8 +20,6 @@
 package net.ccbluex.liquidbounce.deeplearn.data.sample
 
 interface Sample<T: Sample<T>> {
-    val inputSize: Int
-    val outputSize: Int
-    fun toInput(previous: T?): FloatArray
-    fun toOutput(previous: T?): FloatArray
+    fun toInput(previous: T): FloatArray
+    fun toOutput(previous: T): FloatArray
 }

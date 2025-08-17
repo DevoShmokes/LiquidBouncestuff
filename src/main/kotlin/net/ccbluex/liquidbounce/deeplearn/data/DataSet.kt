@@ -32,18 +32,17 @@ data class DataSet(val features: Array<FloatArray>, val labels: Array<FloatArray
         fun <T : Sample<T>> fromSamples(samples: List<T>): DataSet {
             require(samples.isNotEmpty()) { "Samples collection must not be empty." }
 
-            val sample = samples.first()
-            val features = Array(samples.size) { FloatArray(sample.inputSize) }
-            val labels = Array(samples.size) { FloatArray(sample.outputSize) }
+            val features = mutableListOf<FloatArray>()
+            val labels = mutableListOf<FloatArray>()
 
-            for (i in samples.indices) {
+            for (i in 1 until samples.size) {
                 val sample = samples[i]
-                val previousSample = if (i > 0) samples[i - 1] else null
-                features[i] = sample.toInput(previousSample)
-                labels[i] = sample.toOutput(previousSample)
+                val previousSample = samples[i - 1]
+                features.add(sample.toInput(previousSample))
+                labels.add(sample.toOutput(previousSample))
             }
 
-            return DataSet(features, labels)
+            return DataSet(features.toTypedArray(), labels.toTypedArray())
         }
 
     }

@@ -19,7 +19,6 @@
 @file:Suppress("WildcardImport")
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -297,11 +296,6 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
                 target.attack(true, keepSprint && !shouldBlockSprinting)
                 currentScanExtraRange = scanExtraRange.random()
                 KillAuraNotifyWhenFail.failedHitsIncrement = 0
-
-                GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
-                    add("player", GenericDebugRecorder.debugObject(player))
-                    add("targetPos", GenericDebugRecorder.debugObject(target))
-                })
 
                 true
             }
