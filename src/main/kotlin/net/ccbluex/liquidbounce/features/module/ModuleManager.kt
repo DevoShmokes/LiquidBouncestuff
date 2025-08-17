@@ -45,7 +45,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleSampleRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
@@ -268,7 +268,7 @@ object ModuleManager : EventListener, Iterable<ClientModule> by modules {
             ModuleAntiStaff,
             ModuleFlagCheck,
             ModulePacketLogger,
-            ModuleDebugRecorder,
+            ModuleSampleRecorder,
             ModuleAntiCheatDetect,
             ModuleEasyPearl,
 

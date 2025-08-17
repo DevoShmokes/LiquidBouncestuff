@@ -15,20 +15,25 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
-package net.ccbluex.liquidbounce.deeplearn.models
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.deeplearn.translators.FloatArrayInAndOutTranslator
+package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.clicking
 
-class MinaraiModel(
-    name: String,
-    parent: ChoiceConfigurable<*>
-) : ModelWrapper<FloatArray, FloatArray>(
-    name,
-    FloatArrayInAndOutTranslator(),
-    2, // X, Y
-    parent
-)
+import net.ccbluex.liquidbounce.deeplearn.data.sample.ClickingSample
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleSampleRecorder
+import org.lwjgl.glfw.GLFW
+
+object ClickingRecorder : ModuleSampleRecorder.DebugRecorderMode<ClickingSample>("Clicking") {
+
+    @Suppress("unused")
+    private val mouseHandler = handler<MouseButtonEvent> { event ->
+        if (event.button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            return@handler
+        }
+
+
+    }
+
+}

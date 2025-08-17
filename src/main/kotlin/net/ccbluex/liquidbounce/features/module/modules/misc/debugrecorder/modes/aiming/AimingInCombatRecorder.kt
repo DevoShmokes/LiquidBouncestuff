@@ -15,11 +15,9 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
+package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.aiming
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.deeplearn.data.sample.AimingSample
@@ -29,7 +27,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleSampleRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.BoxRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -52,7 +50,7 @@ import net.minecraft.util.math.Box
 /**
  * Records combat behavior
  */
-object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<AimingSample>("MinaraiCombat") {
+object AimingInCombatRecorder : ModuleSampleRecorder.DebugRecorderMode<AimingSample>("AimingInCombat") {
 
     private var targetTracker = tree(TargetTracker(
         // Start tracking target that we look at the closest

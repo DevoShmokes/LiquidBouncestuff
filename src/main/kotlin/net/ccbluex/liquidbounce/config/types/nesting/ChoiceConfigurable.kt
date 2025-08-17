@@ -112,7 +112,8 @@ class ChoiceConfigurable<T : Choice>(
 /**
  * A mode is sub-module to separate different bypasses into extra classes
  */
-abstract class Choice(name: String) : Configurable(name), EventListener, NamedChoice, MinecraftShortcuts {
+abstract class Choice(name: String, aliases: Array<out String> = emptyArray()) :
+    Configurable(name, aliases = aliases), EventListener, NamedChoice, MinecraftShortcuts {
 
     override val choiceName: String
         get() = this.name

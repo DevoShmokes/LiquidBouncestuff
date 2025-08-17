@@ -45,15 +45,15 @@ import kotlin.time.measureTimedValue
 
 /**
  * Record using
- * - [net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiCombatRecorder]
- * - [net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiTrainer]
+ * - [net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.aiming.AimingInCombatRecorder]
+ * - [net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.aiming.AimingTrainer]
  * and then train a model - after that you will be able to use it with
- * [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.MinaraiAngleSmooth].
+ * [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.HumanizedAIAngleSmooth].
  */
-class MinaraiAngleSmooth(
+class HumanizedAIAngleSmooth(
     parent: ChoiceConfigurable<*>,
     val fallback: AngleSmooth
-) : AngleSmooth("Minarai", parent) {
+) : AngleSmooth("HumanizedAI", parent, arrayOf("Minarai")) {
 
     private val choices = choices("Model", 0) { local ->
         models.onChanged { _ ->

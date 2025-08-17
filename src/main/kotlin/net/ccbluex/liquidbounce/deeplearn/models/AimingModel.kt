@@ -18,23 +18,17 @@
  *
  *
  */
-package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth
+package net.ccbluex.liquidbounce.deeplearn.models
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.RotationProcessor
+import net.ccbluex.liquidbounce.deeplearn.translators.FloatArrayInAndOutTranslator
 
-/**
- * An [AngleSmooth]'er, but as choice
- */
-abstract class AngleSmooth(
+class AimingModel(
     name: String,
-    override val parent: ChoiceConfigurable<*>,
-    aliases: Array<out String> = emptyArray()
-) : Choice(name, aliases), RotationProcessor {
-    abstract fun calculateTicks(
-        currentRotation: Rotation,
-        targetRotation: Rotation
-    ): Int
-}
+    parent: ChoiceConfigurable<*>
+) : ModelWrapper<FloatArray, FloatArray>(
+    name,
+    FloatArrayInAndOutTranslator(),
+    2, // X, Y
+    parent
+)

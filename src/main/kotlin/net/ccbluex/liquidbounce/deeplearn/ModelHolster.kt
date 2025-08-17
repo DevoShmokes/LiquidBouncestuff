@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.deeplearn
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
-import net.ccbluex.liquidbounce.deeplearn.models.MinaraiModel
+import net.ccbluex.liquidbounce.deeplearn.models.AimingModel
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -57,7 +57,7 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
         // Empty models for start-up initialization.
         // These will be replaced later on at [load].
         allModels.mapArray { name ->
-            MinaraiModel(name, choiceConfigurable)
+            AimingModel(name, choiceConfigurable)
         }
     }
 
@@ -69,7 +69,7 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
     fun load() {
         logger.info("[DeepLearning] Loading models...")
         val choices = allModels.map { name ->
-            MinaraiModel(name, models)
+            AimingModel(name, models)
         }
 
         for (model in choices) {

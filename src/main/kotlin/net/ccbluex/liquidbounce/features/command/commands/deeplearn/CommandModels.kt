@@ -27,21 +27,20 @@ import net.ccbluex.liquidbounce.deeplearn.ModelHolster
 import net.ccbluex.liquidbounce.deeplearn.ModelHolster.models
 import net.ccbluex.liquidbounce.deeplearn.data.DataSet
 import net.ccbluex.liquidbounce.deeplearn.data.sample.AimingSample
-import net.ccbluex.liquidbounce.deeplearn.models.MinaraiModel
+import net.ccbluex.liquidbounce.deeplearn.models.AimingModel
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiCombatRecorder
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiTrainer
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.aiming.AimingInCombatRecorder
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.aiming.AimingTrainer
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.util.Util
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
@@ -159,13 +158,13 @@ object CommandModels : CommandFactory {
             .build()
     }
 
-    private fun trainModel(command: Command, name: String, model: MinaraiModel? = null) = runCatching {
+    private fun trainModel(command: Command, name: String, model: AimingModel? = null) = runCatching {
         val (samples, sampleTime) = measureTimedValue {
             AimingSample.parse(
                 // Combat data
-                MinaraiCombatRecorder.folder,
+                AimingInCombatRecorder.folder,
                 // Trainer data
-                MinaraiTrainer.folder
+                AimingTrainer.folder
             )
         }
 
@@ -183,7 +182,7 @@ object CommandModels : CommandFactory {
         chat(command.result("preparedData", datasetTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
         val trainingTime = measureTime {
-            val model = model ?: MinaraiModel(name, models).also { model -> models.choices.add(model) }
+            val model = model ?: AimingModel(name, models).also { model -> models.choices.add(model) }
             model.train(dataset)
             model.save()
 

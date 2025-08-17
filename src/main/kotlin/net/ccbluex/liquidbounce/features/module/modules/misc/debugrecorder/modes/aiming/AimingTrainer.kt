@@ -15,17 +15,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
+package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.aiming
 
 import net.ccbluex.liquidbounce.deeplearn.data.sample.AimingSample
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleSampleRecorder
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -43,7 +41,7 @@ import kotlin.random.Random
 /**
  * Simulates scenarios where the player is training to hit a target.
  */
-object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<AimingSample>("MinaraiTrainer") {
+object AimingTrainer : ModuleSampleRecorder.DebugRecorderMode<AimingSample>("AimingTrainer") {
 
     private var isFirstRun = true
 

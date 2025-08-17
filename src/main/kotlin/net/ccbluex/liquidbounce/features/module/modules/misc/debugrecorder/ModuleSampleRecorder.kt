@@ -25,36 +25,35 @@ import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.deeplearn.data.sample.Sample
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.*
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.aiming.AimingInCombatRecorder
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.aiming.AimingTrainer
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.clicking.ClickingRecorder
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import java.time.LocalDateTime
 
-object ModuleDebugRecorder : ClientModule("DebugRecorder", Category.MISC, disableOnQuit = true) {
+object ModuleSampleRecorder : ClientModule("SampleRecorder", Category.MISC, disableOnQuit = true) {
 
     init {
-        // [Debug Recorder] is usually used by developers and testers and is not needed in the auto config.
+        // [SampleRecorder] is usually used by developers and testers and is not needed in the auto config.
         doNotIncludeAlways()
     }
 
-    val modes = choices("Mode", GenericDebugRecorder, arrayOf(
-        MinaraiCombatRecorder,
-        MinaraiTrainer,
-
-        GenericDebugRecorder,
-        DebugCPSRecorder,
-        AimDebugRecorder,
-        BoxDebugRecorder
+    val modes = choices("Mode", AimingInCombatRecorder, arrayOf(
+        AimingInCombatRecorder,
+        AimingTrainer,
+        ClickingRecorder,
     ))
 
-    abstract class DebugRecorderMode<T>(name: String) : Choice(name) {
+    abstract class DebugRecorderMode<T : Sample<*>>(name: String) : Choice(name) {
         override val parent: ChoiceConfigurable<*>
             get() = modes
 
-        val folder = ConfigSystem.rootFolder.resolve("debug-recorder/$name").apply {
+        val folder = ConfigSystem.rootFolder.resolve("samples/$name").apply {
             mkdirs()
         }
         internal val packets = mutableListOf<T>()
