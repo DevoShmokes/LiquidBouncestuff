@@ -425,7 +425,7 @@
     "liquidbounce.module.damageParticles.description": "Toont wanneer entiteiten leven verliezen of krijgen.",
     "liquidbounce.module.dankBobbing.description": "Vergroot het schudden van je camera tijdens het bewegen.",
     "liquidbounce.module.debug.description": "Enkel interessant voor ontwikkelaars.",
-    "liquidbounce.module.debugRecorder.description": "Enkel interessant voor ontwikkelaars.",
+    "liquidbounce.module.sampleRecorder.description": "Enkel interessant voor ontwikkelaars.",
     "liquidbounce.module.smartEat.description": "Eet automatisch wanneer je hongerbalk laag is.",
     "liquidbounce.module.derp.description": "Laat het lijken alsof je aan het dollen bent voor anderen.",
     "liquidbounce.module.twerk.description": "Laat je herhaaldelijk sneaken en loslaten.",

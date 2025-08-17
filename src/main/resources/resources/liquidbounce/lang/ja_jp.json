@@ -366,7 +366,7 @@
 	"liquidbounce.module.damage.description": "指定された量のダメージを自身に与えます。",
 	"liquidbounce.module.dankBobbing.description": "さらに画面の揺れを追加します。",
 	"liquidbounce.module.debug.description": "デベロッパーのみ。",
-	"liquidbounce.module.debugRecorder.description": "デベロッパーのみ。",
+	"liquidbounce.module.sampleRecorder.description": "デベロッパーのみ。",
 	"liquidbounce.module.derp.description": "ふざけているように見せます。",
 	"liquidbounce.module.disabler.description": "特定のアンチチートまたはサーバーを無効化します。",
 	"liquidbounce.module.disabler.messages.grimSpectateMessage": "検知されました。Disablerモジュールを無効化するべきです。",

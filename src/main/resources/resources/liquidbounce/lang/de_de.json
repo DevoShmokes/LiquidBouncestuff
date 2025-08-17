@@ -387,7 +387,7 @@
   "liquidbounce.module.damage.description": "Fügt sich selbst die angegebene Schadensmenge zu.",
   "liquidbounce.module.dankBobbing.description": "Erhöht den Wackeleffekt der Ansicht.",
   "liquidbounce.module.debug.description": "Nur für Entwickler interessant.",
-  "liquidbounce.module.debugRecorder.description": "Nur für Entwickler interessant.",
+  "liquidbounce.module.sampleRecorder.description": "Nur für Entwickler interessant.",
   "liquidbounce.module.smartEat.description": "Isst automatisch Essen, wenn dein Hunger niedrig ist.",
   "liquidbounce.module.derp.description": "Lässt dich so aussehen, als würdest du rumeumeln",
   "liquidbounce.module.disabler.description": "Versucht, das AntiCheat des Servers zu deaktivieren.",

@@ -425,7 +425,7 @@
   "liquidbounce.module.damageParticles.description": "Varlıkların sağlık değişikliklerini gösterir.",
   "liquidbounce.module.dankBobbing.description": "Görüş sallanma efektini artırır.",
   "liquidbounce.module.debug.description": "Sadece geliştiriciler için ilgi çekici.",
-  "liquidbounce.module.debugRecorder.description": "Sadece geliştiriciler için ilgi çekici.",
+  "liquidbounce.module.sampleRecorder.description": "Sadece geliştiriciler için ilgi çekici.",
   "liquidbounce.module.smartEat.description": "Açlık seviyeniz düştüğünde otomatik olarak yemek yer.",
   "liquidbounce.module.derp.description": "Diğer oyunculara deli gibi göründüğünüzü hissettirir.",
   "liquidbounce.module.twerk.description": "Otomatik olarak eğilip kalkar.",

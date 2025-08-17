@@ -493,7 +493,7 @@
   "liquidbounce.module.damageParticles.description": "在实体生命值变化时显示变化情况。",
   "liquidbounce.module.dankBobbing.description": "增加视角摇晃效果的幅度。",
   "liquidbounce.module.debug.description": "只有开发者会感兴趣。",
-  "liquidbounce.module.debugRecorder.description": "只有开发者会感兴趣。",
+  "liquidbounce.module.sampleRecorder.description": "只有开发者会感兴趣。",
   "liquidbounce.module.smartEat.description": "饥饿值低时自动进食。",
   "liquidbounce.module.derp.description": "让你在其他玩家眼中看起来像是在瞎折腾。",
   "liquidbounce.module.twerk.description": "自动潜行并取消潜行。",
