@@ -6,8 +6,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack.runWithNearestTrackedDistance
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.attack.EntityUtils
+import net.ccbluex.liquidbounce.utils.client.ClientUtils
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
@@ -26,7 +27,6 @@ import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.toDegrees
 import kotlin.random.Random.Default.nextBoolean
 
 object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
@@ -174,13 +174,13 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
     private fun getYawToPoint(entity: Entity, point: Vec3): Float {
         val deltaX = point.xCoord - entity.posX
         val deltaZ = point.zCoord - entity.posZ
-        return ((atan2(deltaZ, deltaX).toDegrees()) - 90.0).toFloat() % 360f
+        return ((Math.toDegrees(atan2(deltaZ, deltaX)) - 90.0).toFloat()) % 360f
     }
 
     private fun getPitchToPoint(entity: Entity, point: Vec3): Float {
         val deltaY = point.yCoord - (entity.posY + entity.eyeHeight.toDouble())
         val distance = entity.getDistance(point.xCoord, entity.posY, point.zCoord)
-        return (atan2(deltaY, distance).toDegrees() * -1.0).toFloat() % 360f
+        return (Math.toDegrees(atan2(deltaY, distance)) * -1.0).toFloat() % 360f
     }
 
     private fun handleLeftClick(time: Long, doubleClick: Int) {
