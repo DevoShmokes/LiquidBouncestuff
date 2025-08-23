@@ -178,6 +178,8 @@ object ModuleManager : Listenable, Collection<Module> by MODULE_REGISTRY {
             Rotations,
             SafeWalk,
             Scaffold,
+            BetterVelocity,
+            BetterKB,
             ServerCrasher,
             SkinDerp,
             SlimeJump,
