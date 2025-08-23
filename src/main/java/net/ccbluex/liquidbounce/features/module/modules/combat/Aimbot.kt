@@ -83,6 +83,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT) {
     private val headLock by boolean("Headlock", false) { center && lock }
     private val headLockBlockHeight by float("HeadBlockHeight", -1f, -2f..0f) { headLock && center && lock }
     private val breakBlocks by boolean("BreakBlocks", true)
+    private val disableWhileSneaking by boolean("DisableWhileSneaking", false)
 
     private val clickTimer = MSTimer()
 
@@ -91,6 +92,8 @@ object Aimbot : Module("Aimbot", Category.COMBAT) {
 
         val player = mc.thePlayer ?: return@handler
         val world = mc.theWorld ?: return@handler
+
+        if (disableWhileSneaking && player.isSneaking) return@handler
 
         // Clicking delay
         if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
