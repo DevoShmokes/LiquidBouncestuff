@@ -102,7 +102,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT) {
             } else {
                 if (left && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && time - leftLastSwing >= leftDelay) {
                     handleLeftClick(time, doubleClick)
-                } else if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && shouldAutoRightClick() && mc.gameSettings.keyBindAttack.pressTime != 0) {
+                } else if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && shouldAutoRightClick() && mc.gameSettings.keyBindAttack.pressTime != 0 && isTargetInBlockRange()) {
                     handleBlock(time)
                 }
             }
@@ -134,6 +134,15 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT) {
         val player = mc.thePlayer ?: return null
 
         return entities.minByOrNull { player.getDistanceToEntityBox(it) }
+    }
+
+    private fun isTargetInBlockRange(): Boolean {
+        val player = mc.thePlayer ?: return false
+        val currentTarget = target
+        if (currentTarget != null && !currentTarget.isDead) {
+            if (player.getDistanceToEntityBox(currentTarget) <= range) return true
+        }
+        return getNearestEntityInRange() != null
     }
 
     private fun shouldAutoRightClick() = mc.thePlayer.heldItem?.itemUseAction in arrayOf(EnumAction.BLOCK)
