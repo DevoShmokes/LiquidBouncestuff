@@ -5,9 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -22,11 +20,9 @@ import net.minecraft.network.play.server.S29PacketSoundEffect
 
 object BetterKB : Module("BetterKB", Category.COMBAT) {
 
-    private val gticks by int("Ticks", 1, 0..20)
     private val debug by boolean("Debug", false)
     private val sprint by boolean("ShowSprint", false)
 
-    private var ticks = -1
     private var isSprinting = false
     private var blockInput = false
     private var lastAttackedEntity: Entity? = null
@@ -34,16 +30,6 @@ object BetterKB : Module("BetterKB", Category.COMBAT) {
 
     override fun onToggle(state: Boolean) {
         blockInput = false
-        ticks = -1
-    }
-
-    val onUpdate = handler<UpdateEvent> {
-        if (ticks == -1) return@handler
-
-        if (++ticks >= gticks) {
-            ticks = -1
-            blockInput = false
-        }
     }
 
     val onPacket = handler<PacketEvent> { event ->
@@ -77,7 +63,6 @@ object BetterKB : Module("BetterKB", Category.COMBAT) {
                         }
                         lastAttackTime = 0L
                         blockInput = true
-                        ticks = 0
                     }
                 }
             }
@@ -90,6 +75,14 @@ object BetterKB : Module("BetterKB", Category.COMBAT) {
         }
     }
 
-    fun shouldBlockInput() = handleEvents() && blockInput
+    fun shouldBlockInput(): Boolean {
+        if (handleEvents()) {
+            if (blockInput) {
+                blockInput = false
+                return true
+            }
+        }
+        return false
+    }
 }
 

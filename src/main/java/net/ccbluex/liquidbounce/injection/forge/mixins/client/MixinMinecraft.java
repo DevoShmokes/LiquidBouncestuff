@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
+import net.ccbluex.liquidbounce.features.module.modules.combat.BetterAutoClicker;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ShittyAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.TickBase;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.MultiActions;
@@ -42,6 +44,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -106,6 +109,50 @@ public abstract class MixinMinecraft {
 
         liquidBounce$preloadFuture = LiquidBounce.INSTANCE.preload();
     }
+
+
+//    @Group(name = "lb$mouseStateRedirects", min = 1)
+//    @Redirect(
+//            method = "runTick",
+//            at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getEventButtonState()Z"),
+//            require = 0 // optional so it won't hard-fail if the count differs between mappings
+//    )
+//    private boolean lb$redirectMouseState0() {
+//        if (Mouse.getEventButton() == mc.gameSettings.keyBindAttack.getKeyCode() + 100 && ShittyAutoClicker.INSTANCE.isActive()) {
+//            System.out.println("ordnial 0 returning " + ShittyAutoClicker.INSTANCE.getPressed() + " " + System.currentTimeMillis());
+//            return ShittyAutoClicker.INSTANCE.getPressed();
+//        }
+//        return Mouse.getEventButtonState();
+//    }
+//
+//    @Group(name = "lb$mouseStateRedirects", min = 1)
+//    @Redirect(
+//            method = "runTick",
+//            at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getEventButtonState()Z", ordinal = 1),
+//            require = 0
+//    )
+//    private boolean lb$redirectMouseState1() {
+//        if (Mouse.getEventButton() == mc.gameSettings.keyBindAttack.getKeyCode() + 100 && ShittyAutoClicker.INSTANCE.isActive()) {
+//            System.out.println("ordnial 1 returning " + ShittyAutoClicker.INSTANCE.getPressed() + " " + System.currentTimeMillis());
+//            return ShittyAutoClicker.INSTANCE.getPressed();
+//        }
+//        return Mouse.getEventButtonState();
+//    }
+//
+//    @Group(name = "lb$mouseStateRedirects", min = 1)
+//    @Redirect(
+//            method = "runTick",
+//            at = @At(value = "INVOKE", target = "Lorg/lwjgl/input/Mouse;getEventButtonState()Z", ordinal = 2),
+//            require = 0
+//    )
+//    private boolean lb$redirectMouseState2() {
+//        if (Mouse.getEventButton() == mc.gameSettings.keyBindAttack.getKeyCode() + 100 && ShittyAutoClicker.INSTANCE.isActive()) {
+//            System.out.println("ordnial 2 returning " + ShittyAutoClicker.INSTANCE.getPressed() + " " + System.currentTimeMillis());
+//            return ShittyAutoClicker.INSTANCE.getPressed();
+//        }
+//        return Mouse.getEventButtonState();
+//    }
+
 
     @Inject(method = "runGameLoop", at = @At(value = "INVOKE", target = "Lnet/minecraft/profiler/Profiler;startSection(Ljava/lang/String;)V", ordinal = 1))
     private void hook(CallbackInfo ci) {
@@ -228,9 +275,17 @@ public abstract class MixinMinecraft {
             leftClickCounter = 0;
         }
 
+        if (BetterAutoClicker.INSTANCE.isActive()) {
+            leftClickCounter = 0;
+        }
+
         if (leftClickCounter <= 0) {
             CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.LEFT);
         }
+
+       // System.out.println("clicked mouse " + leftClickCounter + " time " + System.currentTimeMillis());
+
+
     }
 
     @Inject(method = "middleClickMouse", at = @At("HEAD"))

@@ -25,6 +25,7 @@ import net.minecraft.item.EnumAction
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
+import org.lwjgl.input.Mouse
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.random.Random.Default.nextBoolean
@@ -82,7 +83,7 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
                 mc.gameSettings.keyBindUseItem.pressTime = 0
             }
 
-            if (mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick) {
+            if (Mouse.isButtonDown(mc.gameSettings.keyBindAttack.keyCode + 100) && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick) {
                 if (left && time - leftLastSwing >= leftDelay) {
                     handleLeftClick(time, doubleClick)
                 } else if (block && isWorthBlocking() && mc.gameSettings.keyBindAttack.pressTime != 0) {
