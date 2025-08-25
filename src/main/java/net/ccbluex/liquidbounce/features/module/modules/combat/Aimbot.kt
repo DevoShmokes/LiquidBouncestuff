@@ -53,6 +53,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT) {
     private val disableWhileSneaking by boolean("DisableWhileSneaking", false)
 
     private val clickTimer = MSTimer()
+    private var lockedTarget: Entity? = null
 
     val onMotion = handler<MotionEvent> { event ->
         if (event.eventState != EventState.POST) return@handler
@@ -70,21 +71,50 @@ object Aimbot : Module("Aimbot", Category.COMBAT) {
             return@handler
         }
 
-        // Search for the best enemy to target
-        val entity = world.loadedEntityList.filter {
-            Backtrack.runWithNearestTrackedDistance(it) {
-                isSelected(
-                    it,
-                    true
-                ) && player.canEntityBeSeen(it) && player.getDistanceToEntityBox(it) <= range && rotationDifference(it) <= fov
+        // Helper to check if a target is still valid
+        fun isValidTarget(target: Entity): Boolean =
+            Backtrack.runWithNearestTrackedDistance(target) {
+                isSelected(target, true) &&
+                        player.canEntityBeSeen(target) &&
+                        player.getDistanceToEntityBox(target) <= range
             }
-        }.minByOrNull { player.getDistanceToEntityBox(it) } ?: return@handler
+
+        // Keep current locked target if valid; otherwise, acquire a new one
+        val entity = if (lock) {
+            val current = lockedTarget
+            val stillValid = current != null && isValidTarget(current)
+            if (stillValid) current!! else {
+                val acquired = world.loadedEntityList.filter {
+                    Backtrack.runWithNearestTrackedDistance(it) {
+                        isSelected(it, true) &&
+                                player.canEntityBeSeen(it) &&
+                                player.getDistanceToEntityBox(it) <= range &&
+                                rotationDifference(it) <= fov
+                    }
+                }.minByOrNull { player.getDistanceToEntityBox(it) }
+                lockedTarget = acquired
+                acquired ?: return@handler
+            }
+        } else {
+            // Non-lock behavior: pick best target this tick
+            world.loadedEntityList.filter {
+                Backtrack.runWithNearestTrackedDistance(it) {
+                    isSelected(
+                        it,
+                        true
+                    ) && player.canEntityBeSeen(it) && player.getDistanceToEntityBox(it) <= range && rotationDifference(it) <= fov
+                }
+            }.minByOrNull { player.getDistanceToEntityBox(it) } ?: return@handler
+        }
 
         if (!lock && isFaced(entity, range.toDouble())) return@handler
 
         val random = Random()
 
         if (Backtrack.runWithNearestTrackedDistance(entity) { !findRotation(entity, random) }) return@handler
+
+        // Clear locked target if it becomes invalid after rotation step
+        if (lock && (lockedTarget == null || !isValidTarget(lockedTarget!!))) lockedTarget = null
 
         if (jitter) {
             if (random.nextBoolean()) {
