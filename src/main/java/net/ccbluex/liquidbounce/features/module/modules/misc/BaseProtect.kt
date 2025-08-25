@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.kotlin.StringUtils.contains
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.network.play.server.S45PacketTitle
+import net.minecraft.network.play.server.S02PacketChat
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
@@ -45,14 +46,9 @@ object BaseProtect : Module("BaseProtect", Category.MISC) {
         val anyTeamMatches = world.scoreboard.teams.any { BW_SUBSTRINGS in it.colorPrefix }
 
         val scoreboardLooksLikeBW = titleMatches || anyObjectiveMatches || anyTeamMatches
-        if (!scoreboardLooksLikeBW) {
-            // If scoreboard no longer resembles BedWars, reset start markers
-            countdownSeen = false
-            gameStarted = false
-        }
         val wasInBedwars = inBedwars
-        // Only mark in-game after start countdown completes AND scoreboard resembles BedWars
-        inBedwars = scoreboardLooksLikeBW && gameStarted
+        // Mark in-game purely off countdown-based start to avoid lobby beds
+        inBedwars = gameStarted
 
         if (!wasInBedwars && inBedwars) {
             // On transition to detected BedWars, lock bed position near player
@@ -140,24 +136,47 @@ object BaseProtect : Module("BaseProtect", Category.MISC) {
         recentlyWarned.clear()
     }
 
-    // Detect BedWars start countdown via title packets (5 -> 0 / GO! / FIGHT!)
+    // Detect BedWars start countdown via title and chat packets
     val onPacket = handler<PacketEvent> { event ->
         when (val p = event.packet) {
             is S45PacketTitle -> {
                 val typeName = p.type?.name ?: ""
-                if (!typeName.equals("TITLE", true)) return@handler
+                // Accept TITLE and SUBTITLE to be safe across servers
+                if (!(typeName.equals("TITLE", true) || typeName.equals("SUBTITLE", true))) return@handler
                 val raw = p.message?.unformattedText?.trim() ?: return@handler
                 val text = raw.uppercase()
 
                 // Countdowns commonly show as "5", "4", ..., "1"
-                if (text.matches(Regex("^[5-1]$"))) {
+                if (text.matches(Regex(".*\b[5-1]\b.*"))) {
                     countdownSeen = true
                     return@handler
                 }
 
                 // Start indicators: "0", "GO!", "FIGHT!", sometimes "START!"
-                if (text == "0" || text == "GO!" || text == "FIGHT!" || text == "START!") {
-                    if (countdownSeen) gameStarted = true
+                if (text == "0" || text.contains("GO") || text.contains("FIGHT") || text.contains("START")) {
+                    // If we observed countdown or direct start title, mark game started
+                    gameStarted = true
+                }
+            }
+            is S02PacketChat -> {
+                val raw = p.chatComponent?.unformattedText?.trim() ?: return@handler
+                val lower = raw.lowercase()
+
+                // Pattern: "The game starts in X seconds!"
+                val m = Regex("\\b(the\\s+game|game)\\s+starts?\\s+in\\s+(\\d+)\\s+second").find(lower)
+                if (m != null) {
+                    countdownSeen = true
+                    val secs = m.groupValues.getOrNull(2)?.toIntOrNull()
+                    if (secs != null && secs <= 1) {
+                        gameStarted = true
+                    }
+                    return@handler
+                }
+
+                // Some servers print bare countdown numbers in chat (10..1)
+                if (countdownSeen && lower.matches(Regex("^\\d{1,2}$"))) {
+                    val n = lower.toIntOrNull() ?: return@handler
+                    if (n <= 1) gameStarted = true
                 }
             }
         }
