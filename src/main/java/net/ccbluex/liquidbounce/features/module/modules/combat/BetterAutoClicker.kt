@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack.runWithNearestTrackedDistance
 import net.ccbluex.liquidbounce.utils.rotation.RotationUtils
+import net.ccbluex.liquidbounce.utils.movement.FallingPlayer
 import net.ccbluex.liquidbounce.utils.attack.EntityUtils
 import net.ccbluex.liquidbounce.utils.client.ClientUtils
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
@@ -18,10 +19,16 @@ import net.ccbluex.liquidbounce.utils.kotlin.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.kotlin.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
 import net.minecraft.client.settings.KeyBinding
+import net.minecraft.enchantment.Enchantment
+import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.init.Items
+import net.minecraft.item.ItemStack
+import net.minecraft.item.ItemSword
 import net.minecraft.item.EnumAction
+import net.minecraft.block.BlockAir
+import net.minecraft.util.BlockPos
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
@@ -48,6 +55,12 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
     private val left by boolean("Left", true)
     private val jitter by boolean("Jitter", false)
     private val block by boolean("AutoBlock", false)
+    private val autoStick by boolean("AutoStick", false)
+    private val autoStickSimulate by boolean("AutoStickSimulate", true) { autoStick }
+    private val autoStickVoidTicks by int("AutoStickVoidTicks", 300, 50..400) { autoStickSimulate && autoStick }
+    private val autoStickKBHorizontal by float("AutoStickKBHorizontal", 0.4f, 0.2f..1.0f) { autoStickSimulate && autoStick }
+    private val autoStickKBPerLevel by float("AutoStickKBPerLevel", 0.5f, 0.0f..1.0f) { autoStickSimulate && autoStick }
+    private val autoStickKBVertical by float("AutoStickKBVertical", 0.1f, 0.0f..0.5f) { autoStickSimulate && autoStick }
 
     private val fov by float("TargetInFOVforBlock", 180f, 1f..180f)
     private val range by float("TargetInRangeForBlock", 4.4f, 1f..8f)
@@ -59,6 +72,7 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
     private var leftLastSwing = 0L
     private var lastBlocking = 0L
     private var shouldJitter = false
+    private var lastChosenSlot = -1
 
     init {
         maxCPSValue.onChange { _, new -> new.coerceAtLeast(minCPS) }
@@ -72,6 +86,7 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
     override fun onDisable() {
         leftLastSwing = 0L
         lastBlocking = 0L
+        lastChosenSlot = -1
     }
 
     val onRender3D = handler<Render3DEvent> {
@@ -84,6 +99,8 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
             }
 
             if (Mouse.isButtonDown(mc.gameSettings.keyBindAttack.keyCode + 100) && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick) {
+                // Auto Stick decision before executing click/block logic
+                maybeSwitchForAutoStick()
                 if (left && time - leftLastSwing >= leftDelay) {
                     handleLeftClick(time, doubleClick)
                 } else if (block && isWorthBlocking() && mc.gameSettings.keyBindAttack.pressTime != 0) {
@@ -206,4 +223,167 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
     }
 
     private fun generateClickDelay() = randomClickDelay(minCPS, maxCPS)
+
+    // --- Auto Stick support ---
+    private fun maybeSwitchForAutoStick() {
+        if (!autoStick) return
+        val player = mc.thePlayer ?: return
+
+        // Prefer the entity under crosshair; otherwise pick nearest valid target
+        val target = (mc.objectMouseOver?.entityHit as? EntityLivingBase)
+            ?: mc.theWorld.loadedEntityList.asSequence()
+                .filterIsInstance<EntityLivingBase>()
+                .filter { EntityUtils.isSelected(it, true) }
+                .filter { player.getDistanceToEntityBox(it) <= range }
+                .minByOrNull { player.getDistanceToEntityBox(it) }
+            ?: return
+        if (!EntityUtils.isSelected(target, true)) return
+
+        // Find KB stick first (also provides level)
+        val kbStickSlot = findKnockbackStickSlot()
+        val currentSlot = player.inventory.currentItem
+
+        // Decide: simulation (preferred) or fallback heuristic
+        val shouldUseStick = if (autoStickSimulate && kbStickSlot != -1) {
+            val stack = player.inventory.getStackInSlot(kbStickSlot)
+            val kbLevel = EnchantmentHelper.getEnchantmentLevel(Enchantment.knockback.effectId, stack)
+            predictVoidWithKB(player, target, kbLevel)
+        } else {
+            isVoidBehindTarget(player, target)
+        }
+
+        if (shouldUseStick) {
+            if (kbStickSlot != -1 && kbStickSlot != currentSlot && kbStickSlot != lastChosenSlot) {
+                selectHotbarSlot(kbStickSlot)
+                if (debug) ClientUtils.displayChatMessage("AutoStick: switching to KB stick (sim=${autoStickSimulate})")
+                lastChosenSlot = kbStickSlot
+            }
+        } else {
+            // If currently on a KB stick, prefer switching to a sword
+            val held = player.heldItem
+            if (isKnockbackStick(held)) {
+                val swordSlot = findSwordSlot()
+                if (swordSlot != -1 && swordSlot != currentSlot && swordSlot != lastChosenSlot) {
+                    selectHotbarSlot(swordSlot)
+                    if (debug) ClientUtils.displayChatMessage("AutoStick: switching back to sword")
+                    lastChosenSlot = swordSlot
+                }
+            }
+        }
+    }
+
+    // Predict if a KB hit would send target into void by simulating their future path
+    private fun predictVoidWithKB(attacker: EntityLivingBase, target: EntityLivingBase, kbLevel: Int): Boolean {
+        if (kbLevel <= 0) return false
+
+        val (hx, hz) = computeKBVector(attacker, target, kbLevel,
+            autoStickKBHorizontal, autoStickKBPerLevel
+        )
+
+        val initVX = target.motionX + hx
+        val initVZ = target.motionZ + hz
+        val initVY = if (target.motionY > autoStickKBVertical) target.motionY else autoStickKBVertical.toDouble()
+
+        val sim = FallingPlayer(
+            target.posX,
+            target.posY,
+            target.posZ,
+            initVX,
+            initVY,
+            initVZ,
+            attacker.rotationYaw,
+            0f,
+            0f
+        )
+
+        val collision = sim.findCollision(autoStickVoidTicks)
+        return collision == null
+    }
+
+    private fun computeKBVector(
+        attacker: EntityLivingBase,
+        target: EntityLivingBase,
+        kbLevel: Int,
+        baseHorizontal: Float,
+        perLevel: Float,
+    ): Pair<Double, Double> {
+        val dx = target.posX - attacker.posX
+        val dz = target.posZ - attacker.posZ
+        val len = kotlin.math.sqrt(dx * dx + dz * dz)
+        if (len < 1e-6) return 0.0 to 0.0
+        val dirX = dx / len
+        val dirZ = dz / len
+        val base = baseHorizontal * (1f + perLevel * kbLevel)
+        // push away from attacker along (dirX, dirZ)
+        return (dirX * base) to (dirZ * base)
+    }
+
+    private fun isVoidBehindTarget(player: EntityLivingBase, target: EntityLivingBase): Boolean {
+        val world = mc.theWorld ?: return false
+
+        val dx = target.posX - player.posX
+        val dz = target.posZ - player.posZ
+        val len = kotlin.math.sqrt((dx * dx + dz * dz))
+        if (len < 0.001) return false
+        val dirX = dx / len
+        val dirZ = dz / len
+
+        // Sample a few steps behind the target along player->target direction
+        // and ensure there is no solid ground beneath for several blocks.
+        val baseY = kotlin.math.floor(target.posY).toInt()
+        for (step in 1..4) {
+            val sx = target.posX + dirX * step
+            val sz = target.posZ + dirZ * step
+            val sample = BlockPos(sx, baseY.toDouble(), sz)
+
+            var clearBelow = true
+            var checkPos = sample.down()
+            var checks = 0
+            while (checks < 3 && checkPos.y > 0) {
+                val block = world.getBlockState(checkPos).block
+                if (block !is BlockAir) {
+                    clearBelow = false
+                    break
+                }
+                checkPos = checkPos.down()
+                checks++
+            }
+
+            if (clearBelow) return true
+        }
+        return false
+    }
+
+    private fun findKnockbackStickSlot(): Int {
+        val player = mc.thePlayer ?: return -1
+        for (slot in 0..8) {
+            val stack = player.inventory.getStackInSlot(slot)
+            if (isKnockbackStick(stack)) return slot
+        }
+        return -1
+    }
+
+    private fun isKnockbackStick(stack: ItemStack?): Boolean {
+        if (stack == null) return false
+        if (stack.item != Items.stick) return false
+        val level = EnchantmentHelper.getEnchantmentLevel(Enchantment.knockback.effectId, stack)
+        return level > 0
+    }
+
+    private fun findSwordSlot(): Int {
+        val player = mc.thePlayer ?: return -1
+        for (slot in 0..8) {
+            val stack = player.inventory.getStackInSlot(slot)
+            if (stack?.item is ItemSword) return slot
+        }
+        return -1
+    }
+
+    private fun selectHotbarSlot(slot: Int) {
+        val player = mc.thePlayer ?: return
+        if (slot < 0 || slot > 8) return
+        if (player.inventory.currentItem == slot) return
+        player.inventory.currentItem = slot
+        mc.playerController.updateController()
+    }
 }
