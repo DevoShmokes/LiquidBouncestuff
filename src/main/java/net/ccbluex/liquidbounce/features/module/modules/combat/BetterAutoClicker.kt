@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack.runWith
 import net.ccbluex.liquidbounce.utils.rotation.RotationUtils
 import net.ccbluex.liquidbounce.utils.movement.FallingPlayer
 import net.ccbluex.liquidbounce.utils.attack.EntityUtils
+import net.ccbluex.liquidbounce.utils.render.drawWithTessellatorWorldRenderer
 import net.ccbluex.liquidbounce.utils.client.ClientUtils
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
@@ -32,7 +33,9 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import org.lwjgl.input.Mouse
+import org.lwjgl.opengl.GL11.*
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.random.Random.Default.nextBoolean
@@ -61,6 +64,8 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
     private val autoStickKBHorizontal by float("AutoStickKBHorizontal", 0.4f, 0.2f..1.0f) { autoStickSimulate && autoStick }
     private val autoStickKBPerLevel by float("AutoStickKBPerLevel", 0.5f, 0.0f..1.0f) { autoStickSimulate && autoStick }
     private val autoStickKBVertical by float("AutoStickKBVertical", 0.1f, 0.0f..0.5f) { autoStickSimulate && autoStick }
+    private val autoStickRender by boolean("AutoStickRender", false) { autoStick }
+    private val autoStickRenderRange by float("AutoStickRenderRange", 12f, 3f..24f) { autoStick }
 
     private val fov by float("TargetInFOVforBlock", 180f, 1f..180f)
     private val range by float("TargetInRangeForBlock", 4.4f, 1f..8f)
@@ -96,6 +101,10 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
 
             if (block && thePlayer.swingProgress > 0 && !mc.gameSettings.keyBindUseItem.isKeyDown) {
                 mc.gameSettings.keyBindUseItem.pressTime = 0
+            }
+
+            if (autoStick && autoStickRender) {
+                renderAutoStickPrediction()
             }
 
             if (Mouse.isButtonDown(mc.gameSettings.keyBindAttack.keyCode + 100) && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick) {
@@ -318,6 +327,106 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
         return (dirX * base) to (dirZ * base)
     }
 
+    private fun renderAutoStickPrediction() {
+        val player = mc.thePlayer ?: return
+
+        // Prefer entity under crosshair; fallback to nearest valid target within range
+        val target = (mc.objectMouseOver?.entityHit as? EntityLivingBase)
+            ?: mc.theWorld.loadedEntityList.asSequence()
+                .filterIsInstance<EntityLivingBase>()
+                .filter { EntityUtils.isSelected(it, true) }
+                .filter { player.getDistanceToEntityBox(it) <= autoStickRenderRange }
+                .minByOrNull { player.getDistanceToEntityBox(it) }
+            ?: return
+        if (!EntityUtils.isSelected(target, true)) return
+
+        // Allow plain sticks for visualization; prefer actual KB stick if present
+        val kbStickSlot = findKnockbackStickSlot()
+        val anyStickSlot = findPlainStickSlot()
+        val chosenSlot = if (kbStickSlot != -1) kbStickSlot else anyStickSlot
+        if (chosenSlot == -1) return
+        val stack = player.inventory.getStackInSlot(chosenSlot)
+        var kbLevel = EnchantmentHelper.getEnchantmentLevel(Enchantment.knockback.effectId, stack)
+        if (kbLevel <= 0) kbLevel = 1 // visualize with minimal KB if not enchanted
+
+        val (hx, hz) = computeKBVector(player, target, kbLevel, autoStickKBHorizontal, autoStickKBPerLevel)
+        val initVX = target.motionX + hx
+        val initVZ = target.motionZ + hz
+        val initVY = if (target.motionY > autoStickKBVertical) target.motionY else autoStickKBVertical.toDouble()
+
+        // Simulate tick-by-tick future positions until collision or limit
+        val positions = mutableListOf<Vec3>()
+        var x = target.posX
+        var y = target.posY
+        var z = target.posZ
+        var vx = initVX
+        var vy = initVY
+        var vz = initVZ
+
+        val world = mc.theWorld ?: return
+        var hit = false
+        repeat(autoStickVoidTicks) {
+            val start = Vec3(x, y, z)
+
+            // Physics step (mirrors FallingPlayer without input)
+            vy -= 0.08
+            vx *= 0.91
+            vy *= 0.9800000190734863
+            vy *= 0.91
+            vz *= 0.91
+
+            x += vx
+            y += vy
+            z += vz
+
+            val end = Vec3(x, y, z)
+            // Stop if ground collision is predicted (same condition as FallingPlayer)
+            val result = world.rayTraceBlocks(start, end, true)
+            if (result != null && result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && result.sideHit == net.minecraft.util.EnumFacing.UP) {
+                positions += Vec3(result.blockPos.x + 0.5, result.blockPos.y.toDouble(), result.blockPos.z + 0.5)
+                hit = true
+                return@repeat
+            }
+
+            positions += end
+        }
+
+        // Render line strip of predicted positions in world space
+        val manager = mc.renderManager ?: return
+
+        glPushAttrib(GL_ALL_ATTRIB_BITS)
+        glPushMatrix()
+        glDisable(GL_TEXTURE_2D)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glDisable(GL_DEPTH_TEST)
+        glLineWidth(2f)
+        glColor4f(0f, 1f, 0f, 0.8f)
+
+        drawWithTessellatorWorldRenderer {
+            begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+            positions.forEach { p ->
+                pos(p.xCoord - manager.viewerPosX, p.yCoord - manager.viewerPosY, p.zCoord - manager.viewerPosZ).endVertex()
+            }
+        }
+
+        // Mark end point (collision or last)
+        val last = positions.lastOrNull()
+        if (last != null) {
+            glPointSize(6f)
+            glBegin(GL_POINTS)
+            if (hit) glColor4f(1f, 0f, 0f, 0.9f) else glColor4f(1f, 1f, 0f, 0.9f)
+            glVertex3d(last.xCoord - manager.viewerPosX, last.yCoord - manager.viewerPosY, last.zCoord - manager.viewerPosZ)
+            glEnd()
+        }
+
+        glEnable(GL_DEPTH_TEST)
+        glDisable(GL_BLEND)
+        glEnable(GL_TEXTURE_2D)
+        glPopMatrix()
+        glPopAttrib()
+    }
+
     private fun isVoidBehindTarget(player: EntityLivingBase, target: EntityLivingBase): Boolean {
         val world = mc.theWorld ?: return false
 
@@ -359,6 +468,15 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
         for (slot in 0..8) {
             val stack = player.inventory.getStackInSlot(slot)
             if (isKnockbackStick(stack)) return slot
+        }
+        return -1
+    }
+
+    private fun findPlainStickSlot(): Int {
+        val player = mc.thePlayer ?: return -1
+        for (slot in 0..8) {
+            val stack = player.inventory.getStackInSlot(slot)
+            if (stack != null && stack.item == Items.stick) return slot
         }
         return -1
     }
