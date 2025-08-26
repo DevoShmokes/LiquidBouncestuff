@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager.registerCommand
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.AutoDance
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.SkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.SnakeGame
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
@@ -36,6 +37,7 @@ object ModuleManager : Listenable, Collection<Module> by MODULE_REGISTRY {
 
         // Register modules
         val modules = arrayOf(
+            BetterAutoClicker,
             AbortBreaking,
             Aimbot,
             Ambience,
@@ -95,6 +97,7 @@ object ModuleManager : Listenable, Collection<Module> by MODULE_REGISTRY {
             Criticals,
             Damage,
             Derp,
+            AutoDance,
             ESP,
             Eagle,
             FakeLag,
@@ -156,6 +159,7 @@ object ModuleManager : Listenable, Collection<Module> by MODULE_REGISTRY {
             NoSlowBreak,
             NoSwing,
             Notifier,
+            BaseProtect,
             NoWeb,
             Nuker,
             PacketDebugger,
@@ -178,6 +182,8 @@ object ModuleManager : Listenable, Collection<Module> by MODULE_REGISTRY {
             Rotations,
             SafeWalk,
             Scaffold,
+            BetterVelocity,
+            BetterKB,
             ServerCrasher,
             SkinDerp,
             SlimeJump,
