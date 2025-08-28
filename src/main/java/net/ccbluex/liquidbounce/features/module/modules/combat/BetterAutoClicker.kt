@@ -60,11 +60,12 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
     private val block by boolean("AutoBlock", false)
     private val autoStick by boolean("AutoStick", false)
     private val autoStickSimulate by boolean("AutoStickSimulate", true) { autoStick }
-    private val autoStickVoidTicks by int("AutoStickVoidTicks", 300, 50..400) { autoStickSimulate && autoStick }
+    private val autoStickVoidTicks by int("AutoStickVoidTicks", 300, 0..400) { autoStickSimulate && autoStick }
     private val autoStickKBHorizontal by float("AutoStickKBHorizontal", 0.4f, 0.2f..1.0f) { autoStickSimulate && autoStick }
     private val autoStickKBPerLevel by float("AutoStickKBPerLevel", 0.5f, 0.0f..1.0f) { autoStickSimulate && autoStick }
     private val autoStickKBVertical by float("AutoStickKBVertical", 0.1f, 0.0f..0.5f) { autoStickSimulate && autoStick }
     private val autoStickRender by boolean("AutoStickRender", false) { autoStick }
+    private val autoStickRenderImpulseOnly by boolean("AutoStickRenderImpulseOnly", false) { autoStick && autoStickRender }
     private val autoStickRenderRange by float("AutoStickRenderRange", 12f, 3f..24f) { autoStick }
 
     private val fov by float("TargetInFOVforBlock", 180f, 1f..180f)
@@ -77,7 +78,6 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
     private var leftLastSwing = 0L
     private var lastBlocking = 0L
     private var shouldJitter = false
-    private var lastChosenSlot = -1
 
     init {
         maxCPSValue.onChange { _, new -> new.coerceAtLeast(minCPS) }
@@ -91,7 +91,7 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
     override fun onDisable() {
         leftLastSwing = 0L
         lastBlocking = 0L
-        lastChosenSlot = -1
+        // no stateful slot memory
     }
 
     val onRender3D = handler<Render3DEvent> {
@@ -248,34 +248,28 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
             ?: return
         if (!EntityUtils.isSelected(target, true)) return
 
-        // Find KB stick first (also provides level)
+        // Only switch based on simulation result: if the simulated target NEVER touches ground within the window
         val kbStickSlot = findKnockbackStickSlot()
         val currentSlot = player.inventory.currentItem
-
-        // Decide: simulation (preferred) or fallback heuristic
-        val shouldUseStick = if (autoStickSimulate && kbStickSlot != -1) {
+        if (autoStickSimulate && kbStickSlot != -1) {
             val stack = player.inventory.getStackInSlot(kbStickSlot)
             val kbLevel = EnchantmentHelper.getEnchantmentLevel(Enchantment.knockback.effectId, stack)
-            predictVoidWithKB(player, target, kbLevel)
-        } else {
-            isVoidBehindTarget(player, target)
-        }
+            val noGroundContact = predictVoidWithKB(player, target, kbLevel)
 
-        if (shouldUseStick) {
-            if (kbStickSlot != -1 && kbStickSlot != currentSlot && kbStickSlot != lastChosenSlot) {
-                selectHotbarSlot(kbStickSlot)
-                if (debug) ClientUtils.displayChatMessage("AutoStick: switching to KB stick (sim=${autoStickSimulate})")
-                lastChosenSlot = kbStickSlot
-            }
-        } else {
-            // If currently on a KB stick, prefer switching to a sword
-            val held = player.heldItem
-            if (isKnockbackStick(held)) {
-                val swordSlot = findSwordSlot()
-                if (swordSlot != -1 && swordSlot != currentSlot && swordSlot != lastChosenSlot) {
-                    selectHotbarSlot(swordSlot)
-                    if (debug) ClientUtils.displayChatMessage("AutoStick: switching back to sword")
-                    lastChosenSlot = swordSlot
+            if (noGroundContact) {
+                if (kbStickSlot != currentSlot) {
+                    selectHotbarSlot(kbStickSlot)
+                    if (debug) ClientUtils.displayChatMessage("AutoStick: switching to KB stick (no ground contact)")
+                }
+            } else {
+                // If currently on a KB stick and sim says they land, switch back to a sword
+                val held = player.heldItem
+                if (isKnockbackStick(held)) {
+                    val swordSlot = findSwordSlot()
+                    if (swordSlot != -1 && swordSlot != currentSlot) {
+                        selectHotbarSlot(swordSlot)
+                        if (debug) ClientUtils.displayChatMessage("AutoStick: switching back to sword (ground contact)")
+                    }
                 }
             }
         }
@@ -285,13 +279,19 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
     private fun predictVoidWithKB(attacker: EntityLivingBase, target: EntityLivingBase, kbLevel: Int): Boolean {
         if (kbLevel <= 0) return false
 
-        val (hx, hz) = computeKBVector(attacker, target, kbLevel,
-            autoStickKBHorizontal, autoStickKBPerLevel
+        val (hx, hz) = computeKBVector(
+            attacker,
+            target,
+            kbLevel,
+            autoStickKBHorizontal,
+            autoStickKBPerLevel
         )
 
-        val initVX = target.motionX + hx
-        val initVZ = target.motionZ + hz
-        val initVY = if (target.motionY > autoStickKBVertical) target.motionY else autoStickKBVertical.toDouble()
+        // Vanilla knockback behavior (simplified): halve existing motion, add horizontal KB, and add small vertical boost only if on ground
+        val initVX = target.motionX * 0.5 + hx
+        val initVZ = target.motionZ * 0.5 + hz
+        var initVY = target.motionY * 0.5
+        if (target.onGround) initVY += 0.4
 
         val sim = FallingPlayer(
             target.posX,
@@ -316,6 +316,7 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
         baseHorizontal: Float,
         perLevel: Float,
     ): Pair<Double, Double> {
+        // Use horizontal direction from attacker -> target (vanilla style), Y excluded
         val dx = target.posX - attacker.posX
         val dz = target.posZ - attacker.posZ
         val len = kotlin.math.sqrt(dx * dx + dz * dz)
@@ -323,7 +324,7 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
         val dirX = dx / len
         val dirZ = dz / len
         val base = baseHorizontal * (1f + perLevel * kbLevel)
-        // push away from attacker along (dirX, dirZ)
+        // Knockback pushes target away from attacker along attacker->target direction
         return (dirX * base) to (dirZ * base)
     }
 
@@ -350,45 +351,62 @@ object BetterAutoClicker : Module("BetterAutoClicker", Category.COMBAT) {
         if (kbLevel <= 0) kbLevel = 1 // visualize with minimal KB if not enchanted
 
         val (hx, hz) = computeKBVector(player, target, kbLevel, autoStickKBHorizontal, autoStickKBPerLevel)
-        val initVX = target.motionX + hx
-        val initVZ = target.motionZ + hz
-        val initVY = if (target.motionY > autoStickKBVertical) target.motionY else autoStickKBVertical.toDouble()
+        // Match vanilla knockback initialization for prediction rendering
+        var initVX = target.motionX * 0.5 + hx
+        var initVZ = target.motionZ * 0.5 + hz
+        var initVY = target.motionY * 0.5
+        if (target.onGround) initVY += 0.4
+
+        // If rendering impulse only, ignore existing velocity and show only the single-hit effect
+        if (autoStickRenderImpulseOnly) {
+            initVX = hx
+            initVZ = hz
+            initVY = if (target.onGround) 0.4 else 0.0
+        }
 
         // Simulate tick-by-tick future positions until collision or limit
         val positions = mutableListOf<Vec3>()
-        var x = target.posX
-        var y = target.posY
-        var z = target.posZ
+        val pt = mc.timer.renderPartialTicks
+        // Start at the visual center of the target this frame (interpolated)
+        var x = target.lastTickPosX + (target.posX - target.lastTickPosX) * pt
+        var y = target.lastTickPosY + (target.posY - target.lastTickPosY) * pt + target.height / 2.0
+        var z = target.lastTickPosZ + (target.posZ - target.lastTickPosZ) * pt
         var vx = initVX
         var vy = initVY
         var vz = initVZ
 
         val world = mc.theWorld ?: return
         var hit = false
-        repeat(autoStickVoidTicks) {
-            val start = Vec3(x, y, z)
+        // Add the starting point to ensure the line anchors at the target center
+        positions += Vec3(x, y, z)
 
-            // Physics step (mirrors FallingPlayer without input)
-            vy -= 0.08
-            vx *= 0.91
-            vy *= 0.9800000190734863
-            vy *= 0.91
-            vz *= 0.91
+        run loop@{
+            repeat(autoStickVoidTicks) {
+                val start = Vec3(x, y, z)
 
-            x += vx
-            y += vy
-            z += vz
+                // Move first, then apply gravity and drag (closer to vanilla order)
+                x += vx
+                y += vy
+                z += vz
 
-            val end = Vec3(x, y, z)
-            // Stop if ground collision is predicted (same condition as FallingPlayer)
-            val result = world.rayTraceBlocks(start, end, true)
-            if (result != null && result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && result.sideHit == net.minecraft.util.EnumFacing.UP) {
-                positions += Vec3(result.blockPos.x + 0.5, result.blockPos.y.toDouble(), result.blockPos.z + 0.5)
-                hit = true
-                return@repeat
+                // Apply gravity and drag
+                vy -= 0.08
+                vy *= 0.98
+                vx *= 0.91
+                vz *= 0.91
+
+                val end = Vec3(x, y, z)
+                // Stop if ground collision is predicted (same condition as FallingPlayer)
+                val result = world.rayTraceBlocks(start, end, true)
+                if (result != null && result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && result.sideHit == net.minecraft.util.EnumFacing.UP) {
+                    // Land at block top center
+                    positions += Vec3(result.blockPos.x + 0.5, result.blockPos.y.toDouble() + 1.0, result.blockPos.z + 0.5)
+                    hit = true
+                    return@loop
+                }
+
+                positions += end
             }
-
-            positions += end
         }
 
         // Render line strip of predicted positions in world space
