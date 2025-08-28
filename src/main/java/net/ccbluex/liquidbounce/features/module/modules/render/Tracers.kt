@@ -24,6 +24,7 @@ import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 object Tracers : Module("Tracers", Category.RENDER) {
 
@@ -78,14 +79,23 @@ object Tracers : Module("Tracers", Category.RENDER) {
         glBegin(GL_LINES)
 
         for (entity in entities) {
-            val dist = mc.thePlayer.getDistanceSqToEntity(entity).coerceAtMost(255.0).toInt()
-
             val colorMode = colorMode.lowercase()
             val color = when {
+                // Keep friends & teammates blue regardless of distance
                 entity is EntityPlayer && entity.isClientFriend() -> Color(0, 0, 255, 150)
                 teams && Teams.handleEvents() && Teams.isInYourTeam(entity) -> Color(0, 162, 232)
                 colorMode == "custom" -> color
-                colorMode == "distancecolor" -> Color(255 - dist, dist, 0, 150)
+                colorMode == "distancecolor" -> {
+                    // Discrete color bands by distance: close=red, mid=yellow, far=green
+                    val dist = sqrt(mc.thePlayer.getDistanceSqToEntity(entity).toFloat())
+                    val t1 = maxRenderDistance.toFloat() / 3f
+                    val t2 = (maxRenderDistance.toFloat() * 2f) / 3f
+                    when {
+                        dist <= t1 -> Color(255, 0, 0, 150)      // close: red
+                        dist <= t2 -> Color(255, 255, 0, 150)    // mid: yellow
+                        else -> Color(0, 255, 0, 150)            // far: green
+                    }
+                }
                 else -> Color(255, 255, 255, 150)
             }
 

@@ -41,6 +41,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT) {
     ) { verticalAim || horizontalAim }
 
     private val fov by float("FOV", 180F, 1F..180F)
+    private val targetingMode by choices("TargetingMode", arrayOf("Closest", "ClosestToCrosshair"), "Closest")
     private val lock by boolean("Lock", true) { horizontalAim || verticalAim }
     private val onClick by boolean("OnClick", false) { horizontalAim || verticalAim }
     private val jitter by boolean("Jitter", false)
@@ -91,7 +92,12 @@ object Aimbot : Module("Aimbot", Category.COMBAT) {
                                 player.getDistanceToEntityBox(it) <= range &&
                                 rotationDifference(it) <= fov
                     }
-                }.minByOrNull { player.getDistanceToEntityBox(it) }
+                }.minByOrNull {
+                    if (targetingMode.equals("ClosestToCrosshair", ignoreCase = true))
+                        rotationDifference(it).toDouble()
+                    else
+                        player.getDistanceToEntityBox(it)
+                }
                 lockedTarget = acquired
                 acquired ?: return@handler
             }
@@ -104,7 +110,12 @@ object Aimbot : Module("Aimbot", Category.COMBAT) {
                         true
                     ) && player.canEntityBeSeen(it) && player.getDistanceToEntityBox(it) <= range && rotationDifference(it) <= fov
                 }
-            }.minByOrNull { player.getDistanceToEntityBox(it) } ?: return@handler
+            }.minByOrNull {
+                if (targetingMode.equals("ClosestToCrosshair", ignoreCase = true))
+                    rotationDifference(it).toDouble()
+                else
+                    player.getDistanceToEntityBox(it)
+            } ?: return@handler
         }
 
         if (!lock && isFaced(entity, range.toDouble())) return@handler

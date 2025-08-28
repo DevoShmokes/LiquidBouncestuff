@@ -10,18 +10,26 @@ import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.inventory.SilentHotbar
+// Intentionally not using SilentHotbar to avoid silent swaps
 
 object AutoTool : Module("AutoTool", Category.PLAYER, subjective = true, gameDetecting = false) {
 
     private val switchBack by boolean("SwitchBack", false)
     private val onlySneaking by boolean("OnlySneaking", false)
+    private var previousSlot: Int? = null
 
     val onGameTick = handler<GameTickEvent> {
         if (!switchBack || mc.gameSettings.keyBindAttack.isKeyDown)
             return@handler
 
-        SilentHotbar.resetSlot(this)
+        val player = mc.thePlayer ?: return@handler
+
+        previousSlot?.let { slot ->
+            if (slot in 0..8 && player.inventory.currentItem != slot) {
+                player.inventory.currentItem = slot
+            }
+            previousSlot = null
+        }
     }
 
     val onClick = handler<ClickBlockEvent> { event ->
@@ -43,7 +51,11 @@ object AutoTool : Module("AutoTool", Category.PLAYER, subjective = true, gameDet
         if (fastest == (player.currentEquippedItem?.getStrVsBlock(block) ?: 1f))
             return@handler
 
-        SilentHotbar.selectSlotSilently(this, slot, render = false, resetManually = true)
+        if (switchBack && previousSlot == null)
+            previousSlot = player.inventory.currentItem
+
+        // Perform a legit (visible) hotbar switch to the best tool
+        player.inventory.currentItem = slot
     }
 
 }
