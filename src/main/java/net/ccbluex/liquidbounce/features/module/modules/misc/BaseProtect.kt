@@ -22,9 +22,11 @@ import kotlin.math.roundToInt
 object BaseProtect : Module("BaseProtect", Category.MISC) {
 
     // Config
-    private val alertRange by int("AlertRange", 20, 10..30)
+    private val alertRange by int("AlertRange", 20, 10..100)
     private val searchRadius by int("BedSearchRadius", 32, 8..64)
     private val warnDelay by int("WarnDelay", 5000, 1000..30000)
+    private val alertSound by text("AlertSound", "ambient.weather.thunder")
+    private val alertVolume by float("AlertVolume", 10.0f, 0f..10f)
 
     // State
     @Volatile private var inBedwars = false
@@ -85,9 +87,8 @@ object BaseProtect : Module("BaseProtect", Category.MISC) {
     }
 
     private fun isTeammate(entity: EntityPlayer): Boolean {
-        val player = mc.thePlayer ?: return false
-        val teamEq = player.team != null && entity.team != null && player.team.isSameTeam(entity.team)
-        return teamEq || Teams.isInYourTeam(entity)
+        // Always defer to Teams module logic so settings there control behavior
+        return Teams.isInYourTeam(entity)
     }
 
     val onUpdate = handler<UpdateEvent> {
@@ -122,6 +123,9 @@ object BaseProtect : Module("BaseProtect", Category.MISC) {
                 if (now - last >= warnDelay) {
                     val dist = kotlin.math.sqrt(distSq).roundToInt()
                     chat("§7[BaseProtect] §c${entity.name} near bed §7(${dist}m) at §f${bed.x} ${bed.y} ${bed.z}")
+                    // Play configurable alert sound
+                    val sound = alertSound.trim()
+                    if (sound.isNotEmpty()) mc.thePlayer?.playSound(sound, alertVolume, 1.0f)
                     recentlyWarned[key] = now
                 }
             }

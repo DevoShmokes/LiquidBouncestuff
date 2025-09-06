@@ -12,7 +12,7 @@ import java.awt.Color
 class BaseProtectHUD(
     x: Double = 6.0, y: Double = 80.0, scale: Float = 1F,
     side: Side = Side.default()
-) : Element("BaseProtectHUD", x, y, scale, side) {
+) : Element("BaseProtect", x, y, scale, side) {
 
     private val showCoords by boolean("ShowBedCoords", true)
     private val showNearest by boolean("ShowNearest", true)
